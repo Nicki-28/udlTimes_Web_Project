@@ -3,7 +3,6 @@ from django.contrib import admin
 # Register your models here.
 
 from .models import (
-    User,
     Wordle,
     StatsWordle,
     Framed,
@@ -14,7 +13,6 @@ from .models import (
     StatsConnections,
 )
 
-admin.site.register(User)
 admin.site.register(Wordle)
 admin.site.register(StatsWordle)
 admin.site.register(Framed)
