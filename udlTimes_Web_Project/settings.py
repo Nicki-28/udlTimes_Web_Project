@@ -37,7 +37,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'udlTImes.apps.UdltimesConfig',
+    'udltimes.apps.UdltimesConfig',
 ]
 
 MIDDLEWARE = [
