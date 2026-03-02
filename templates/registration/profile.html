@@ -1,0 +1,35 @@
+<h1>Perfil de {{ user.username }}</h1>
+
+
+<h2>Wordle</h2>
+{% if wordle_stats %}
+    <ul>
+        {% for stat in wordle_stats %}
+            <li>{{ stat.game.word }} - {{ stat.completed|yesno:"Completado,No completado" }} ({{ stat.game.date }})</li>
+        {% endfor %}
+    </ul>
+{% else %}
+    <p>No hay estadísticas de Wordle.</p>
+{% endif %}
+
+<h2>Framed</h2>
+{% if framed_stats %}
+    <ul>
+        {% for stat in framed_stats %}
+            <li>{{ stat.id_game.paraula }} - {{ stat.value }}</li>
+        {% endfor %}
+    </ul>
+{% else %}
+    <p>No hay estadísticas de Framed.</p>
+{% endif %}
+
+<h2>Connections</h2>
+{% if connections_stats %}
+    <ul>
+        {% for stat in connections_stats %}
+            <li>{{ stat.game.date }} - {{ stat.completed|yesno:"Completado,No completado" }}</li>
+        {% endfor %}
+    </ul>
+{% else %}
+    <p>No hay estadísticas de Connections.</p>
+{% endif %}
