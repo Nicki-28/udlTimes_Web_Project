@@ -1,16 +1,31 @@
+# Use Python 3.13 as the base image (slim = smaller size, no extra tools)
 FROM python:3.13-slim
 
-ENV PYTHONDONTWRITEBYTECODE 1
-ENV PYTHONUNBUFFERED 1
+# Install uv
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 
+# Set the working directory inside the container
 WORKDIR /app
 
-COPY requirements.txt .
-RUN pip install --upgrade pip
-RUN pip install -r requirements.txt
+# Copy dependency files first (this helps Docker cache layers, 
+# dependencies won't be reinstalled unless these files change)
+COPY pyproject.toml uv.lock ./
 
+# Install the exact packages pinned in uv.lock
+# --frozen: don't update the lockfile, just install what's in it
+# --no-dev: skip development-only dependencies
+RUN uv sync --frozen --no-dev
+
+# Copy the entire project into the container
 COPY . .
 
+# Tell Docker this container will listen on port 8000
 EXPOSE 8000
 
-CMD ["uvicorn", "udlTimes_Web_Project.asgi:application", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+# Command that runs when the container starts:
+# 1. Apply database migrations (create/update tables)
+# 2. Start Django's development server on all interfaces (0.0.0.0)
+CMD uv run python manage.py migrate && uv run python manage.py runserver 0.0.0.0:8000
+
+# 127.0.0.1 = only reachable from inside the container (default, won't work with Docker)
+# 0.0.0.0 = listen on all interfaces, so the host machine can reach the container
