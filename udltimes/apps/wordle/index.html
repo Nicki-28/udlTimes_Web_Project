@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mi Pruebecita de Wordle</title>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-sky-50 text-black flex items-center justify-center h-screen">
+
+    <div class="text-center">
+        <h1 class="text-4xl font-bold mb-8">Mi Wordle</h1>
+
+    <div id="tablero" class="grid grid-cols-5 gap-2">
+        </div>
+
+    <script>
+
+        const tablero = document.getElementById("tablero");
+
+        for (let fila =0; fila <6 ; fila ++){
+            for (let col=0 ; col <5 ; col++){
+                const casilla = document.createElement("div");
+
+                casilla.id= `box-${fila}${col}`;
+
+                //le pegamos automaticamente todas los estilismos
+                casilla.className = "w-16 h-16 border-2 border-gray-400 flex items-center justify-center text-3xl font-bold uppercase";
+                casilla.innerText = `${fila}${col}`;
+                tablero.appendChild(casilla);
+            }
+        }
+
+    </script>
+     <! --pedir palabra del back y mostrarla en pantalla --!>
+
+
+</body>
+</html>
