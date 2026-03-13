@@ -10,6 +10,8 @@ from udltimes.models import StatsWordle, StatsFramed, StatsConnections
 
 
 # Create your views here.
+def home(request):
+    return render(request, 'home.html')
 
 class SignUpView(CreateView):
     form_class = UserCreationForm
