@@ -17,9 +17,12 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 
-from udltimes.views import SignUpView, profile_view, home
+from udltimes.views import SignUpView, profile_view, home, wordle_view, connections_view, framed_view
 
 urlpatterns = [
+    path('wordle/', wordle_view, name='wordle'),
+    path('connections/', connections_view, name='connections'),
+    path('framed/', framed_view, name='framed'),
     path('', home, name='home'),
     path('admin/', admin.site.urls),
     path('accounts/signup/', SignUpView.as_view(), name='signup'),

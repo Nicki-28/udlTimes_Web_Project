@@ -10,6 +10,15 @@ from udltimes.models import StatsWordle, StatsFramed, StatsConnections
 
 
 # Create your views here.
+def wordle_view(request):
+    return render(request, 'wordle.html')
+
+def connections_view(request):
+    return render(request, 'connections.html')
+
+def framed_view(request):
+    return render(request, 'framed.html')
+
 def home(request):
     return render(request, 'home.html')
 

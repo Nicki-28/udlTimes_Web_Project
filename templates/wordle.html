@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>UdL-Times | Wordle</title>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Bungee&amp;family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,typography,container-queries"></script>
+<script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        primary: "#700040", // University Purple
+                        "primary-light": "#8a1a58",
+                        "background-light": "#f8fafc",
+                        "background-dark": "#0f172a",
+                        secondary: "#f59e0b", // Gold
+                        correct: "#700040", // Signature UdL Purple (replacing green)
+                        present: "#f59e0b", // Gold (replacing yellow)
+                        absent: "#475569", // Slate 600
+                    },
+                    fontFamily: {
+                        display: ["Bungee", "cursive"],
+                        sans: ["Inter", "sans-serif"],
+                    },
+                    borderRadius: {
+                        DEFAULT: "0.75rem",
+                    },
+                },
+            },
+        };
+    </script>
+<style type="text/tailwindcss">
+        .grid-pattern {
+            background-image: radial-gradient(circle, #00000010 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+        .dark .grid-pattern {
+            background-image: radial-gradient(circle, #ffffff10 1px, transparent 1px);
+        }
+        .wordle-grid {
+            display: grid;
+            grid-template-rows: repeat(6, 1fr);
+            gap: 5px;
+        }
+        .wordle-row {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 5px;
+        }
+        .tile {
+            aspect-ratio: 1/1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            border: 2px solid #cbd5e1;
+            user-select: none;
+        }
+        .dark .tile {
+            border-color: #334155;
+        }
+        .tile-correct {
+            background-color: theme('colors.correct');
+            border-color: theme('colors.correct');
+            color: white;
+        }
+        .tile-present {
+            background-color: theme('colors.present');
+            border-color: theme('colors.present');
+            color: white;
+        }
+        .tile-absent {
+            background-color: theme('colors.absent');
+            border-color: theme('colors.absent');
+            color: white;
+        }
+        .key {
+            background-color: #e2e8f0;
+            border-radius: 4px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            height: 58px;
+            user-select: none;
+            transition: all 0.1s;
+        }
+        .dark .key {
+            background-color: #334155;
+        }
+        .key-wide {
+            flex: 1.5;
+        }
+        .key-correct {
+            background-color: theme('colors.correct') !important;
+            color: white;
+        }
+        .key:hover {
+            opacity: 0.9;
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 min-h-screen font-sans grid-pattern">
+<header class="sticky top-0 z-50 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800">
+<div class="max-w-7xl mx-auto px-4 h-20 flex items-center justify-between">
+<div class="flex items-center gap-4">
+<a class="flex items-center gap-4" href="#">
+<div class="flex flex-col items-center">
+<span class="material-symbols-outlined text-primary text-3xl">school</span>
+<span class="text-[8px] font-bold leading-none dark:text-slate-400">UdL</span>
+</div>
+<h1 class="font-display text-2xl tracking-tighter text-primary">UDL-TIMES</h1>
+</a>
+</div>
+<div class="flex items-center gap-6">
+<div class="hidden md:flex items-center gap-1 font-display text-xs text-slate-500">
+<span class="material-symbols-outlined text-sm">workspace_premium</span>
+                STREAK: 12
+            </div>
+<button class="material-symbols-outlined text-slate-500 hover:text-primary transition-colors">help</button>
+<button class="material-symbols-outlined text-slate-500 hover:text-primary transition-colors">settings</button>
+</div>
+</div>
+</header>
+<main class="max-w-2xl mx-auto px-4 py-8 flex flex-col items-center">
+<div class="text-center mb-8">
+<h2 class="font-display text-3xl text-primary mb-1">WORDLE</h2>
+<div class="h-1 w-12 bg-primary mx-auto"></div>
+</div>
+<div class="wordle-grid w-full max-w-[350px] mb-8">
+<div class="wordle-row">
+<div class="tile tile-correct">U</div>
+<div class="tile tile-absent">N</div>
+<div class="tile tile-absent">I</div>
+<div class="tile tile-absent">V</div>
+<div class="tile tile-absent">S</div>
+</div>
+<div class="wordle-row">
+<div class="tile tile-correct">U</div>
+<div class="tile tile-present">L</div>
+<div class="tile tile-absent">T</div>
+<div class="tile tile-absent">R</div>
+<div class="tile tile-absent">A</div>
+</div>
+<div class="wordle-row">
+<div class="tile tile-correct">U</div>
+<div class="tile border-slate-900 dark:border-slate-100">D</div>
+<div class="tile border-slate-900 dark:border-slate-100">L</div>
+<div class="tile"></div>
+<div class="tile"></div>
+</div>
+<div class="wordle-row">
+<div class="tile"></div>
+<div class="tile"></div>
+<div class="tile"></div>
+<div class="tile"></div>
+<div class="tile"></div>
+</div>
+<div class="wordle-row">
+<div class="tile"></div>
+<div class="tile"></div>
+<div class="tile"></div>
+<div class="tile"></div>
+<div class="tile"></div>
+</div>
+<div class="wordle-row">
+<div class="tile"></div>
+<div class="tile"></div>
+<div class="tile"></div>
+<div class="tile"></div>
+<div class="tile"></div>
+</div>
+</div>
+<div class="w-full max-w-[500px] flex flex-col gap-2">
+<div class="flex gap-1.5 justify-center">
+<div class="key flex-1">Q</div>
+<div class="key flex-1">W</div>
+<div class="key flex-1">E</div>
+<div class="key flex-1">R</div>
+<div class="key flex-1">T</div>
+<div class="key flex-1">Y</div>
+<div class="key flex-1 key-correct">U</div>
+<div class="key flex-1">I</div>
+<div class="key flex-1">O</div>
+<div class="key flex-1">P</div>
+</div>
+<div class="flex gap-1.5 justify-center px-4">
+<div class="key flex-1">A</div>
+<div class="key flex-1">S</div>
+<div class="key flex-1">D</div>
+<div class="key flex-1">F</div>
+<div class="key flex-1">G</div>
+<div class="key flex-1">H</div>
+<div class="key flex-1">J</div>
+<div class="key flex-1">K</div>
+<div class="key flex-1">L</div>
+</div>
+<div class="flex gap-1.5 justify-center">
+<div class="key key-wide text-xs">ENTER</div>
+<div class="key flex-1">Z</div>
+<div class="key flex-1">X</div>
+<div class="key flex-1">C</div>
+<div class="key flex-1">V</div>
+<div class="key flex-1">B</div>
+<div class="key flex-1">N</div>
+<div class="key flex-1">M</div>
+<div class="key key-wide">
+<span class="material-symbols-outlined">backspace</span>
+</div>
+</div>
+</div>
+<div class="mt-12 flex flex-col items-center gap-4">
+<button class="bg-primary text-white font-display px-10 py-4 text-xl rounded-full shadow-lg hover:bg-primary-light transition-all active:scale-95">
+            SUBMIT GUESS
+        </button>
+<p class="text-sm text-slate-400 font-medium">Guess the university-themed word!</p>
+</div>
+</main>
+<footer class="fixed bottom-0 w-full bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 py-4">
+<div class="max-w-7xl mx-auto px-4 flex justify-between items-center text-xs font-bold tracking-widest text-slate-400 uppercase">
+<div class="flex gap-8">
+<div class="flex flex-col items-center">
+<span class="text-primary text-lg">84%</span>
+<span>Win %</span>
+</div>
+<div class="flex flex-col items-center">
+<span class="text-primary text-lg">15</span>
+<span>Current Streak</span>
+</div>
+</div>
+<button class="flex items-center gap-2 text-primary border-2 border-primary px-4 py-1 rounded-full hover:bg-primary hover:text-white transition-colors">
+<span class="material-symbols-outlined text-sm">share</span>
+            SHARE
+        </button>
+</div>
+</footer>
+<div class="fixed -bottom-10 -left-10 w-40 h-40 bg-primary/10 rounded-full blur-3xl pointer-events-none"></div>
+<div class="fixed top-1/2 -right-10 w-32 h-32 bg-secondary/10 rounded-full blur-3xl pointer-events-none"></div>
+
+</body></html>
