@@ -5,36 +5,70 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mi Pruebecita de Wordle</title>
 
+    <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@700;800;900&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
-</head>
-<body class="bg-sky-50 text-black flex items-center justify-center h-screen">
-
-    <div class="text-center">
-        <h1 class="text-4xl font-bold mb-8">Mi Wordle</h1>
-
-    <div id="tablero" class="grid grid-cols-5 gap-2">
-        </div>
 
     <script>
-
-        const tablero = document.getElementById("tablero");
-
-        for (let fila =0; fila <6 ; fila ++){
-            for (let col=0 ; col <5 ; col++){
-                const casilla = document.createElement("div");
-
-                casilla.id= `box-${fila}${col}`;
-
-                //le pegamos automaticamente todas los estilismos
-                casilla.className = "w-16 h-16 border-2 border-gray-400 flex items-center justify-center text-3xl font-bold uppercase";
-                casilla.innerText = `${fila}${col}`;
-                tablero.appendChild(casilla);
-            }
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            rubik: ['Rubik', 'sans-serif'],
+          },
+          colors: {
+            udl: '#700040'
+          }
         }
+      }
+    }
+  </script>
 
-    </script>
-     <! --pedir palabra del back y mostrarla en pantalla --!>
+</head>
+<body class="bg-sky-50 text-black flex items-start justify-center h-screen pt-[50px] text-xxs ">
 
+    <div class="text-center  inset-x-0 top-0 ">
+        <h1 class="text-3xl dark:text-pink-900 font-rubik mb-5 font-extrabold ">WORDLE</h1>
+
+        <div id="tablero" class="grid grid-cols-5 gap-2">
+        </div>
+
+        <script>
+
+            const tablero = document.getElementById("tablero");
+
+            for (let fila =0; fila <6 ; fila ++){
+                for (let col=0 ; col <5 ; col++){
+                    const casilla = document.createElement("div");
+
+                    casilla.id= `box-${fila}${col}`;
+
+
+                    casilla.className = "w-12 h-12 border-2 border-gray-400 flex items-center justify-center text-3xl font-bold uppercase";
+                    casilla.innerText = `${fila}${col}`;
+                    tablero.appendChild(casilla);
+                }
+            }
+        </script>
+
+        <div id="keyboard" class="grid grid-cols-5 gap-2 mt-8"> </div>
+
+        <script>
+            let q_alphabet= "QWERTYUIOPASDFGHJKLÑ"
+            const kboard = document.getElementById("keyboard");
+            for( let fila =0; fila < q_alphabet.length; fila ++){
+                let letra = q_alphabet[fila];
+                const tecla = document.createElement("div");
+
+                tecla.id= `key-${letra}`;
+                tecla.className = "w-10 h-12 border-2 border-gray-400 flex items-center justify-center text-xl font-bold rounded bg-gray-200 cursor-pointer";
+
+                tecla.innerText = letra
+                kboard.appendChild(tecla);
+
+            }
+        </script>
+
+    </div>
 
 </body>
 </html>
