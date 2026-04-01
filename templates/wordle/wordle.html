@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mi Pruebecita de Wordle</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Bungee&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            bungee: ['Bungee', 'sans-serif'],
+            inter: ['Inter', 'sans-serif'],
+          },
+          colors: {
+            udl: '#700040',
+            key: {
+                correct: '#700040',
+                present: '#C9B458',
+                absent: '#787C7E',
+                default: '#E3E8EC',
+                hover: '#CBD5E1',
+            }
+          }
+        }
+      }
+    }
+    </script>
+</head>
+<body class="bg-[#F6F8FA] text-black flex items-start justify-center h-screen pt-[110px] font-inter">
+
+    <div class="text-center">
+        <h1 class="text-3xl dark:text-pink-900 font-bungee mb-5 font-extrabold">WORDLE</h1>
+
+        <div id="tablero" class="grid grid-cols-5 grid-rows-6 gap-1.5 mx-auto w-fit"></div>
+        <div id="keyboard" class="flex flex-col items-center gap-2 mt-7"></div>
+    </div>
+    <script>
+        let filaActual = 0;
+        let colActual = 0;
+        let intentoActual = "";
+
+        // Tablero
+        const tablero = document.getElementById("tablero");
+        for (let fila = 0; fila < 6; fila++) {
+            for (let col = 0; col < 5; col++) {
+                const casilla = document.createElement("div");
+                casilla.id = `box-${fila}${col}`;
+                casilla.className = "w-14 h-14 border-2 border-gray-300 bg-white flex items-center justify-center text-2xl font-bold uppercase transition-all";
+                tablero.appendChild(casilla);
+            }
+        }
+
+        const filasTeclado = [
+            ["Q", "W", "E", "R", "T", "Y", "U", "I", "O", "P"],
+            ["A", "S", "D", "F", "G", "H", "J", "K", "L", "Ñ"],
+            ["ENTER", "Z", "X", "C", "V", "B", "N", "M", "DEL"]
+        ];
+
+        const keyboard = document.getElementById("keyboard");
+        filasTeclado.forEach((fila) => {
+            const filaDiv = document.createElement("div");
+            filaDiv.className = "flex gap-1.5 w-full justify-center";
+
+            fila.forEach(letra => {
+                const tecla = document.createElement("button");
+                tecla.id = `key-${letra}`;
+                let clases = "h-14 flex items-center justify-center text-sm font-bold rounded-lg cursor-pointer transition-colors uppercase focus:outline-none ";
+                clases += "bg-key-default hover:bg-key-hover text-[#1A1A1A] ";
+
+
+                if (letra === "ENTER" || letra === "DEL") {
+                    clases += "px-4 min-w-[70px] bg-[#E3E8EC] border-[#BFC3C7] ";
+                    if(letra === "ENTER") clases += "text-[10px] ";
+                } else {
+                    clases += "w-11";
+                }
+
+                tecla.className = clases;
+                tecla.innerText = letra === "DEL" ? "⌫" : letra;
+                tecla.onclick = () => manejarEntrada(letra);
+                filaDiv.appendChild(tecla);
+            });
+            keyboard.appendChild(filaDiv);
+        });
+
+
+        // Función mínima para que no de error y escriba
+        function manejarEntrada(letra) {
+            if (letra === "DEL") {
+                if (colActual > 0) {
+                    colActual--;
+                    intentoActual = intentoActual.slice(0, -1);
+                    document.getElementById(`box-${filaActual}${colActual}`).innerText = "";
+                }
+            } else if (letra === "ENTER") {
+                if (intentoActual.length === 5) {
+                    console.log("Validando palabra:", intentoActual);
+
+
+                    //  TO-DO: LOGICA DE COLORES
+                    filaActual++;
+                    colActual = 0;
+                    intentoActual = "";
+                }
+            } else if (intentoActual.length < 5 && letra.length === 1) {
+                const casilla = document.getElementById(`box-${filaActual}${colActual}`);
+                casilla.innerText = letra;
+                casilla.classList.add("scale-110", "border-slate-500");
+
+                setTimeout(() => {
+                    casilla.classList.remove("scale-110", "border-slate-500");
+                }, 100);
+
+                intentoActual += letra;
+                colActual++;
+            }
+        }
+        window.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') manejarEntrada('ENTER');
+            else if (e.key === 'Backspace') manejarEntrada('DEL');
+            else if (e.key.length === 1 && e.key.match(/[a-zñ]/i)) manejarEntrada(e.key.toUpperCase());
+        });
+    </script>
+
+</body>
+</html>
