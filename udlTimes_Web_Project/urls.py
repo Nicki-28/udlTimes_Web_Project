@@ -17,10 +17,12 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 
-from udltimes.views import SignUpView, profile_view, home,wordle_view, connections_view, framed_view
+from udltimes.views import SignUpView, profile_view, home, wordle_view, connections_view, framed_view
+from udltimes.games.wordle.views import check_guess,dailyWordle
 
 urlpatterns = [
     path('wordle/', wordle_view, name='wordle'),
+    path('wordle/check-guess/', check_guess, name='check_guess'),
     path('connections/', connections_view, name='connections'),
     path('framed/', framed_view, name='framed'),
     path('', home, name='home'),
@@ -28,4 +30,5 @@ urlpatterns = [
     path('accounts/signup/', SignUpView.as_view(), name='signup'),
     path('accounts/profile/', profile_view, name='profile'),
     path('accounts/', include('django.contrib.auth.urls')),
+    path('wordle/daily/', dailyWordle, name='dailyWordle'),
 ]
