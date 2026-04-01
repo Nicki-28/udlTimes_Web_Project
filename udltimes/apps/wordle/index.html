@@ -72,6 +72,7 @@
                 let clases = "h-14 flex items-center justify-center text-sm font-bold rounded-lg cursor-pointer transition-colors uppercase focus:outline-none ";
                 clases += "bg-key-default hover:bg-key-hover text-[#1A1A1A] ";
 
+
                 if (letra === "ENTER" || letra === "DEL") {
                     clases += "px-4 min-w-[70px] bg-[#E3E8EC] border-[#BFC3C7] ";
                     if(letra === "ENTER") clases += "text-[10px] ";
@@ -107,6 +108,12 @@
             } else if (intentoActual.length < 5 && letra.length === 1) {
                 const casilla = document.getElementById(`box-${filaActual}${colActual}`);
                 casilla.innerText = letra;
+                casilla.classList.add("scale-110", "border-slate-500");
+
+                setTimeout(() => {
+                    casilla.classList.remove("scale-110", "border-slate-500");
+                }, 100);
+
                 intentoActual += letra;
                 colActual++;
             }
