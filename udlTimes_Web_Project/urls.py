@@ -17,7 +17,7 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 
-from udltimes.views import SignUpView, profile_view, home, wordle_view, connections_view, framed_view
+from udltimes.views import SignUpView, profile_view, home,wordle_view, connections_view, framed_view
 
 urlpatterns = [
     path('wordle/', wordle_view, name='wordle'),
