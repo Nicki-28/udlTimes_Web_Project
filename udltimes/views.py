@@ -6,12 +6,12 @@ from django.shortcuts import render
 from django.urls import reverse_lazy
 from django.views.generic import CreateView, DetailView, ListView
 
-from udltimes.models import StatsWordle, StatsFramed, StatsConnections
+from udltimes.models import StatsWordle, StatsFramed, StatsConnections,Wordle
 
 
 # Create your views here.
 def wordle_view(request):
-    return render(request, 'wordle.html')
+    return render(request, 'wordle/wordle.html')
 
 def connections_view(request):
     return render(request, 'connections.html')
