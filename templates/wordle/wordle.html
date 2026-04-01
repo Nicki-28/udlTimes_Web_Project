@@ -44,6 +44,23 @@
         let colActual = 0;
         let intentoActual = "";
 
+
+        // seguridad para peticiones POST
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+
         // Tablero
         const tablero = document.getElementById("tablero");
         for (let fila = 0; fila < 6; fila++) {
@@ -101,11 +118,45 @@
                 if (intentoActual.length === 5) {
                     console.log("Validando palabra:", intentoActual);
 
+                    // hacemos la llamda
+                    fetch('/wordle/check-guess/', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': getCookie('csrftoken') // El sello de seguridad
+                        },
+                        body: JSON.stringify({ guess: intentoActual })
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        // data.colors será algo como ["correct", "absent", "present", ...]
+                        const coloresTailwind = {
+                            'correct': 'bg-key-correct text-white border-key-correct', // Granate UdL
+                            'present': 'bg-key-present text-white border-key-present', // Dorado
+                            'absent': 'bg-key-absent text-white border-key-absent'     // Gris
+                        };
 
-                    //  TO-DO: LOGICA DE COLORES
-                    filaActual++;
-                    colActual = 0;
-                    intentoActual = "";
+                        //  las casillas una a una
+                        for (let i = 0; i < 5; i++) {
+                            const casilla = document.getElementById(`box-${filaActual}${i}`);
+                            const colorEstado = data.colors[i]; // 'correct', 'present' o 'absent'
+
+                            // Le quitamos el fondo blanco y le ponemos el color que toca
+                            casilla.className = `w-14 h-14 flex items-center justify-center text-2xl font-bold uppercase transition-all duration-500 ${coloresTailwind[colorEstado]}`;
+                        }
+
+                        if (data.win) {
+                            setTimeout(() => alert("¡HAS GANADO! 🎉"), 500);
+                        } else if (filaActual === 5) {
+                            setTimeout(() => alert("¡Oh no! Te has quedado sin intentos."), 500);
+                        }
+
+                        // Pasamos a la siguiente fila
+                        filaActual++;
+                        colActual = 0;
+                        intentoActual = "";
+                    })
+
                 }
             } else if (intentoActual.length < 5 && letra.length === 1) {
                 const casilla = document.getElementById(`box-${filaActual}${colActual}`);
@@ -125,6 +176,27 @@
             else if (e.key === 'Backspace') manejarEntrada('DEL');
             else if (e.key.length === 1 && e.key.match(/[a-zñ]/i)) manejarEntrada(e.key.toUpperCase());
         });
+
+        fetch('/wordle/daily/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: JSON.stringify({ username: "nicole" })
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log("Respuesta del servidor al iniciar:", data);
+            if (data.status === "200") {
+                console.log("Palabra generada con éxito. ¡A jugar!");
+            } else if (data.status === "409") {
+                alert("Ya has jugado hoy. ¡Vuelve mañana!");
+            } else {
+                console.error("Error del servidor:", data.mssg);
+            }
+        })
+        .catch(error => console.error("Error de conexión:", error));
     </script>
 
 </body>
