@@ -28,7 +28,7 @@ def check_guess(request):
 
         secret = word_obj.word.upper()
 
-        #Lógica de colores
+        # Lógica de colores
         colors = ["absent"] * 5
         secret_list = list(secret)
         guess_list = list(guess)
@@ -61,7 +61,8 @@ def check_guess(request):
 def dailyWordle(request):
     if request.method == 'POST':
         today_date = datetime.date.today()
-        # Lee lo del front
+
+        # lee lo del front
         try:
             data = json.loads(request.body)
             username = data.get("username")
@@ -76,79 +77,39 @@ def dailyWordle(request):
         if not user:
             return JsonResponse({"status": "404", "mssg": "Usuario no encontrado"})
 
+        # comprobamos si ya jugó hoy
         stat = StatsWordle.objects.filter(user=user, game__date=today_date).first()
 
         if stat and stat.completed:
             return JsonResponse({"status": "409", "mssg": "El wordle del dia ya ha sido jugado"})
 
         # PALABRA DEL DIA
-        wordle_obj = Wordle.objects
+        wordle_obj = Wordle.objects.filter(date=today_date).first()
 
-        import os
-        import json
-        import random
-        import datetime
-        from django.http import JsonResponse
-        from django.conf import settings
-        from django.views.decorators.csrf import csrf_exempt
-        from django.contrib.auth.models import User
-        from django.shortcuts import render
-        from udltimes.models import Wordle, StatsWordle
+        if wordle_obj:
+            daily_word = wordle_obj.word
+        else:
+            file_path = os.path.join(settings.BASE_DIR, 'udltimes', 'games', 'wordle', 'words.txt')
+            try:
+                with open(file_path, "r", encoding="utf-8") as f:
+                    words = f.read().splitlines()
+                    # Filtramos para asegurar que solo haya palabras de 5 letras
+                    words = [w.strip() for w in words if len(w.strip()) == 5]
 
-        def wordle_page(request):
-            return render(request, 'wordle/index.html')
+                    daily_generator = random.Random(str(today_date))
+                    daily_word = daily_generator.choice(words).upper()
 
-        @csrf_exempt
-        def dailyWordle(request):
-            if request.method == 'POST':
-                today_date = datetime.date.today()
+                # guardamos la nueva palabra en la base de datos
+                Wordle.objects.create(date=today_date, word=daily_word)
 
-                # lee lo del front
-                try:
-                    data = json.loads(request.body)
-                    username = data.get("username")
-                except json.JSONDecodeError:
-                    return JsonResponse({"status": "400", "mssg": "JSON inválido"})
+            except (FileNotFoundError, IndexError):
+                return JsonResponse({"status": "500", "mssg": "Error interno: Archivo words.txt no encontrado o vacío"})
 
-                if not username:
-                    return JsonResponse({"status": "400", "mssg": "Falta el username"})
+        # devolver respuesta
+        return JsonResponse({
+            "status": "200",
+            "already_played": False,
+            # "word": daily_word  <-- Ya lo tienes comentado para que no lo vean en la consola
+        })
 
-                # Buscamos usuario
-                user = User.objects.filter(username=username).first()
-                if not user:
-                    return JsonResponse({"status": "404", "mssg": "Usuario no encontrado"})
-
-                # comprobamos si ya jugó hoy
-                stat = StatsWordle.objects.filter(user=user, game__date=today_date).first()
-
-                if stat and stat.completed:
-                    return JsonResponse({"status": "409", "mssg": "El wordle del dia ya ha sido jugado"})
-
-                # PALABRA DEL DIA
-                wordle_obj = Wordle.objects.filter(date=today_date).first()
-
-                if wordle_obj:
-                    daily_word = wordle_obj.word
-                else:
-                    file_path = os.path.join(settings.BASE_DIR, 'udltimes', 'games', 'wordle', 'words.txt')
-                    try:
-                        with open(file_path, "r", encoding="utf-8") as f:
-                            words = f.read().splitlines()
-                            daily_generator = random.Random(str(today_date))
-                            daily_word = daily_generator.choice(words)
-
-                        # guardamos la nueva palabra en la base de datos
-                        Wordle.objects.create(date=today_date, word=daily_word)
-
-                    except FileNotFoundError:
-                        return JsonResponse({"status": "500", "mssg": "Error interno: Archivo words.txt no encontrado"})
-
-                # devolver respuesta ---------> just debbuging
-
-                return JsonResponse({
-                    "status": "200",
-                    "already_played": False,
-                    #"word": daily_word
-                })
-
-            return JsonResponse({"status": "405", "mssg": "Método no permitido"})
+    return JsonResponse({"status": "405", "mssg": "Método no permitido"})
