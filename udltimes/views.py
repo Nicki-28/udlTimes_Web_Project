@@ -14,7 +14,7 @@ def wordle_view(request):
     return render(request, 'wordle.html')
 
 def connections_view(request):
-    return render(request, 'connections.html')
+    return render(request, 'connections/connections.html')
 
 def framed_view(request):
     return render(request, 'framed.html')
