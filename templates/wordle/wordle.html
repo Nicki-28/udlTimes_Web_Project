@@ -13,23 +13,46 @@
       theme: {
         extend: {
           fontFamily: {
-            bungee: ['Bungee', 'sans-serif'],
-            inter: ['Inter', 'sans-serif'],
+            bungee: ['Bungee', 'sans-serif'], // Fuente para el título
+            inter: ['Inter', 'sans-serif'],   // Fuente para el texto general
           },
           colors: {
-            udl: '#700040',
+            udl: '#700040', // Color corporativo UdL
             key: {
-                correct: '#700040',
-                present: '#C9B458',
-                absent: '#787C7E',
-                default: '#E3E8EC',
-                hover: '#CBD5E1',
+                correct: '#700040', // Granate (Letra correcta en posición correcta)
+                present: '#C9B458', // Dorado (Letra correcta, posición incorrecta)
+                absent: '#787C7E',  // Gris (Letra que no está en la palabra)
+                default: '#E3E8EC', // Fondo de las teclas por defecto
+                hover: '#CBD5E1',   // Color al pasar el ratón por las teclas
             }
           }
         }
       }
     }
     </script>
+
+    <style>
+        /* Animación para voltear las casillas  */
+        @keyframes flip {
+            0% { transform: rotateX(0); }
+            50% { transform: rotateX(90deg); opacity: 0.8; }
+            100% { transform: rotateX(0); }
+        }
+        .anim-flip {
+            animation: flip 0.6s ease-in-out;
+        }
+
+        /* Animación para que la fila tiemble si hay un error */
+        @keyframes shake {
+            10%, 90% { transform: translate3d(-1px, 0, 0); }
+            20%, 80% { transform: translate3d(2px, 0, 0); }
+            30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
+            40%, 60% { transform: translate3d(4px, 0, 0); }
+        }
+        .shake {
+            animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both;
+        }
+    </style>
 </head>
 <body class="bg-[#F6F8FA] text-black flex items-start justify-center h-screen pt-[110px] font-inter">
 
@@ -39,13 +62,15 @@
         <div id="tablero" class="grid grid-cols-5 grid-rows-6 gap-1.5 mx-auto w-fit"></div>
         <div id="keyboard" class="flex flex-col items-center gap-2 mt-7"></div>
     </div>
+
     <script>
-        let filaActual = 0;
-        let colActual = 0;
-        let intentoActual = "";
+        // VARIABLES DE ESTADO DEL JUEGO
+        let filaActual = 0; // Rastrea en qué intento (fila) estamos (0 a 5)
+        let colActual = 0;  // Rastrea en qué letra de la fila estamos (0 a 4)
+        let intentoActual = ""; // Guarda la palabra que se está escribiendo en el momento
 
-
-        // seguridad para peticiones POST
+        // FUNCIÓN DE SEGURIDAD PARA DJANGO
+        // Lee las cookies del navegador para obtener el token CSRF y permitir peticiones POST seguras.
         function getCookie(name) {
             let cookieValue = null;
             if (document.cookie && document.cookie !== '') {
@@ -61,17 +86,22 @@
             return cookieValue;
         }
 
-        // Tablero
+        // 1. GENERACIÓN DEL TABLERO
         const tablero = document.getElementById("tablero");
+        // Bucle para crear 6 filas
         for (let fila = 0; fila < 6; fila++) {
+            // Bucle interno para crear 5 columnas (casillas) por fila
             for (let col = 0; col < 5; col++) {
                 const casilla = document.createElement("div");
+                // Cada casilla recibe un ID único basado en su coordenada, ej: "box-00", "box-01"
                 casilla.id = `box-${fila}${col}`;
                 casilla.className = "w-14 h-14 border-2 border-gray-300 bg-white flex items-center justify-center text-2xl font-bold uppercase transition-all";
                 tablero.appendChild(casilla);
             }
         }
 
+        // 2. GENERACIÓN DEL TECLADO VIRTUAL
+        // Array bidimensional con la distribución típica de un teclado QWERTY
         const filasTeclado = [
             ["Q", "W", "E", "R", "T", "Y", "U", "I", "O", "P"],
             ["A", "S", "D", "F", "G", "H", "J", "K", "L", "Ñ"],
@@ -80,110 +110,131 @@
 
         const keyboard = document.getElementById("keyboard");
         filasTeclado.forEach((fila) => {
+            // Creamos un contenedor (fila) para cada conjunto de teclas
             const filaDiv = document.createElement("div");
             filaDiv.className = "flex gap-1.5 w-full justify-center";
 
             fila.forEach(letra => {
                 const tecla = document.createElement("button");
                 tecla.id = `key-${letra}`;
+
+                // Clases base para todas las teclas
                 let clases = "h-14 flex items-center justify-center text-sm font-bold rounded-lg cursor-pointer transition-colors uppercase focus:outline-none ";
                 clases += "bg-key-default hover:bg-key-hover text-[#1A1A1A] ";
 
-
+                // Estilos específicos si la tecla es especial (ENTER o BORRAR)
                 if (letra === "ENTER" || letra === "DEL") {
                     clases += "px-4 min-w-[70px] bg-[#E3E8EC] border-[#BFC3C7] ";
                     if(letra === "ENTER") clases += "text-[10px] ";
                 } else {
-                    clases += "w-11";
+                    clases += "w-11"; // Ancho normal para las letras
                 }
 
                 tecla.className = clases;
+                // Si la letra es DEL, muestra el icono de borrar, si no, la letra
                 tecla.innerText = letra === "DEL" ? "⌫" : letra;
+                // Al hacer clic, ejecuta la función principal del juego
                 tecla.onclick = () => manejarEntrada(letra);
                 filaDiv.appendChild(tecla);
             });
-            keyboard.appendChild(filaDiv);
+            keyboard.appendChild(filaDiv); // Añadimos la fila completa al teclado
         });
 
-
-        // Función mínima para que no de error y escriba
+        // 3. LÓGICA CENTRAL DEL JUEGO (Manejo de teclas y envíos)
         function manejarEntrada(letra) {
+
+            // ACCIÓN: BORRAR LETRA
             if (letra === "DEL") {
+                // Solo podemos borrar si no estamos en la primera columna
                 if (colActual > 0) {
-                    colActual--;
-                    intentoActual = intentoActual.slice(0, -1);
+                    colActual--; // Retrocedemos una columna
+                    intentoActual = intentoActual.slice(0, -1); // Quitamos la última letra de nuestro string
+                    // Vaciamos visualmente la casilla
                     document.getElementById(`box-${filaActual}${colActual}`).innerText = "";
                 }
+
+            // ACCIÓN: ENVIAR PALABRA
             } else if (letra === "ENTER") {
+                // Solo enviamos si el jugador ha rellenado las 5 letras
                 if (intentoActual.length === 5) {
                     console.log("Validando palabra:", intentoActual);
 
-                    // hacemos la llamda
+                    // Petición al Backend para comprobar la palabra
                     fetch('/wordle/check-guess/', {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
                             'X-CSRFToken': getCookie('csrftoken') // El sello de seguridad
                         },
-                        body: JSON.stringify({ guess: intentoActual })
+                        body: JSON.stringify({ guess: intentoActual }) // Mandamos la palabra en JSON
                     })
                     .then(response => response.json())
                     .then(data => {
-                        // data.colors será algo como ["correct", "absent", "present", ...]
+                        // Diccionario que traduce la respuesta del servidor a clases de Tailwind
                         const coloresTailwind = {
-                            'correct': 'bg-key-correct text-white border-key-correct', // Granate UdL
+                            'correct': 'bg-key-correct text-white border-key-correct', // Granate
                             'present': 'bg-key-present text-white border-key-present', // Dorado
                             'absent': 'bg-key-absent text-white border-key-absent'     // Gris
                         };
 
-                        //  las casillas una a una
+                        // Bucle para pintar las 5 casillas de la fila actual basándonos en la respuesta
                         for (let i = 0; i < 5; i++) {
                             const casilla = document.getElementById(`box-${filaActual}${i}`);
-                            const colorEstado = data.colors[i]; // 'correct', 'present' o 'absent'
+                            const colorEstado = data.colors[i]; // Sacamos el estado ('correct', 'present' o 'absent')
 
-                            // Le quitamos el fondo blanco y le ponemos el color que toca
+                            // Le quitamos el fondo blanco inicial y aplicamos los colores definitivos
                             casilla.className = `w-14 h-14 flex items-center justify-center text-2xl font-bold uppercase transition-all duration-500 ${coloresTailwind[colorEstado]}`;
                         }
 
+                        // Comprobación de final de partida
                         if (data.win) {
-                            setTimeout(() => alert("¡HAS GANADO! 🎉"), 500);
-                        } else if (filaActual === 5) {
+                            setTimeout(() => alert("¡HAS GANADO! 🎉"), 500); // Retraso de medio segundo para que de tiempo a ver los colores
+                        } else if (filaActual === 5) { // Ojo: la última fila es la 5 (índices del 0 al 5 son 6 filas)
                             setTimeout(() => alert("¡Oh no! Te has quedado sin intentos."), 500);
                         }
 
-                        // Pasamos a la siguiente fila
+                        // Preparamos las variables para el siguiente turno
                         filaActual++;
                         colActual = 0;
                         intentoActual = "";
                     })
 
                 }
+
+            // ACCIÓN: ESCRIBIR LETRA
+            // Si no es DEL ni ENTER, hay espacio en la fila, y el input es de 1 solo carácter
             } else if (intentoActual.length < 5 && letra.length === 1) {
                 const casilla = document.getElementById(`box-${filaActual}${colActual}`);
-                casilla.innerText = letra;
-                casilla.classList.add("scale-110", "border-slate-500");
+                casilla.innerText = letra; // Escribimos visualmente la letra
 
+                // Efecto "pop" al escribir la letra (se agranda un poquito)
+                casilla.classList.add("scale-110", "border-slate-500");
                 setTimeout(() => {
                     casilla.classList.remove("scale-110", "border-slate-500");
                 }, 100);
 
-                intentoActual += letra;
-                colActual++;
+                intentoActual += letra; // Añadimos la letra al string interno
+                colActual++; // Avanzamos a la siguiente columna
             }
         }
+
+        // 4. LISTENER PARA EL TECLADO FÍSICO DEL ORDENADOR
         window.addEventListener('keydown', (e) => {
+            // Mapeamos las pulsaciones físicas para que llamen a la misma función del teclado virtual
             if (e.key === 'Enter') manejarEntrada('ENTER');
             else if (e.key === 'Backspace') manejarEntrada('DEL');
             else if (e.key.length === 1 && e.key.match(/[a-zñ]/i)) manejarEntrada(e.key.toUpperCase());
         });
 
+        // 5. INICIALIZADOR AUTOMÁTICO AL CARGAR LA PÁGINA
+        // Le avisa a Django de que el usuario ha entrado, forzándolo a generar la palabra del día en la base de datos
         fetch('/wordle/daily/', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
                 'X-CSRFToken': getCookie('csrftoken')
             },
-            body: JSON.stringify({ username: "nicole" })
+            body: JSON.stringify({ username: "nicole" }) // Hardcodeado a nicole temporalmente
         })
         .then(response => response.json())
         .then(data => {
@@ -191,6 +242,7 @@
             if (data.status === "200") {
                 console.log("Palabra generada con éxito. ¡A jugar!");
             } else if (data.status === "409") {
+                // Si recibe un 409, significa que este usuario ya tiene una partida completada hoy
                 alert("Ya has jugado hoy. ¡Vuelve mañana!");
             } else {
                 console.error("Error del servidor:", data.mssg);
