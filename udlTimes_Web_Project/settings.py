@@ -38,7 +38,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'udltimes.apps.UdltimesConfig',
+    'udltimes',
 ]
 
 MIDDLEWARE = [
@@ -117,6 +117,9 @@ USE_I18N = True
 
 USE_TZ = True
 
+LOGIN_REDIRECT_URL = '/'
+LOGIN_URL = '/accounts/login/'
+EE_USER = config('EE_USER')
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/6.0/howto/static-files/
