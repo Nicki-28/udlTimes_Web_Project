@@ -14,11 +14,14 @@ from django.conf import settings
 def wordle_view(request):
     return render(request, 'wordle.html')
 
+
 def connections_view(request):
     return render(request, 'connections.html')
 
+
 def framed_view(request):
     return render(request, 'framed.html')
+
 
 def home(request):
     ee_user = getattr(settings, 'EE_USER', '')
@@ -108,12 +111,42 @@ def register_view(request):
         full_name = request.POST.get("full_name")
 
         if not username or not password:
-            return redirect("home")
+            return render(request, "home.html", {
+                "register_error": "Username and password are required.",
+                "register_username": username,
+                "register_email": email,
+                "show_register_modal": True
+            })
 
         if User.objects.filter(username=username).exists():
             return render(request, "home.html", {
-                "register_error": "Username already exists",
+                "register_error": "Username already exists.",
                 "register_username": username,
+                "register_email": email,
+                "show_register_modal": True
+            })
+
+        if len(password) < 8:
+            return render(request, "home.html", {
+                "register_error": "Password must be at least 8 characters.",
+                "register_username": username,
+                "register_email": email,
+                "show_register_modal": True
+            })
+
+        if not re.search(r"\d", password):
+            return render(request, "home.html", {
+                "register_error": "Password must contain at least one number.",
+                "register_username": username,
+                "register_email": email,
+                "show_register_modal": True
+            })
+
+        if not re.search(r"[A-Za-z]", password):
+            return render(request, "home.html", {
+                "register_error": "Password must contain at least one letter.",
+                "register_username": username,
+                "register_email": email,
                 "show_register_modal": True
             })
 
@@ -157,8 +190,12 @@ def profile_view(request):
                 error_message = "Current password is incorrect."
             elif new_password != confirm_password:
                 error_message = "New passwords do not match."
-            elif len(new_password) < 6:
-                error_message = "Password must be at least 6 characters."
+            elif len(new_password) < 8:
+                error_message = "Password must be at least 8 characters."
+            elif not re.search(r"\d", new_password):
+                error_message = "Password must contain at least one number."
+            elif not re.search(r"[A-Za-z]", new_password):
+                error_message = "Password must contain at least one letter."
             else:
                 user.set_password(new_password)
                 user.save()
