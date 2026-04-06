@@ -96,7 +96,7 @@ def dailyWordle(request):
                     # Filtramos para asegurar que solo haya palabras de 5 letras
                     words = [w.strip() for w in words if len(w.strip()) == 5]
 
-                    daily_generator = random.Random(str(today_date))
+                    daily_generator = random.Random(today_date.toordinal())
                     daily_word = daily_generator.choice(words).upper()
 
                 # guardamos la nueva palabra en la base de datos
@@ -109,7 +109,7 @@ def dailyWordle(request):
         return JsonResponse({
             "status": "200",
             "already_played": False,
-            # "word": daily_word  <-- Ya lo tienes comentado para que no lo vean en la consola
+            "word": daily_word,
         })
 
     return JsonResponse({"status": "405", "mssg": "Método no permitido"})
