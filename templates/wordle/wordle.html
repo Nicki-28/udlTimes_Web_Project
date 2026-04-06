@@ -112,13 +112,11 @@
     </div>
 
     <script>
-        // VARIABLES DE ESTADO DEL JUEGO
         let filaActual = 0;
         let colActual = 0;
         let intentoActual = "";
         let juegoTerminado = false;
 
-        // FUNCIONES DEL MODAL DE AYUDA
         function abrirAyuda() {
             document.getElementById('modal-ayuda').classList.remove('hidden');
         }
@@ -127,8 +125,20 @@
             document.getElementById('modal-ayuda').classList.add('hidden');
         }
 
-        function mostrarModalFinal(mensaje) {
-            setTimeout(() => alert(mensaje), 500);
+        // ✅ CORRECCIÓN 2: mostrarModalFinal ahora usa los dos parámetros
+        function mostrarModalFinal(titulo, htmlContenido) {
+            const contenedor = document.createElement('div');
+            contenedor.className = "fixed inset-0 bg-black/50 z-50 flex items-center justify-center backdrop-blur-sm";
+            contenedor.innerHTML = `
+                <div class="bg-white p-8 rounded-2xl shadow-2xl max-w-sm w-full mx-4 text-center font-inter">
+                    <h2 class="text-3xl font-extrabold mb-4 text-[#700040] font-bungee">${titulo}</h2>
+                    ${htmlContenido}
+                    <button onclick="this.closest('.fixed').remove()" class="mt-2 px-6 py-2 bg-[#700040] text-white rounded-xl font-bold hover:bg-[#500030] transition-colors">
+                        Cerrar
+                    </button>
+                </div>
+            `;
+            document.body.appendChild(contenedor);
         }
 
         window.addEventListener('load', () => {
@@ -227,7 +237,7 @@
                             'absent': 'bg-key-absent text-white border-key-absent'
                         };
 
-                        const tiempoTotalAnimacion = 5 * 550 + 600;
+                        const tiempoTotalAnimacion = 5 * 600 + 600;
 
                         for (let i = 0; i < 5; i++) {
                             const casilla = document.getElementById(`box-${filaActual}${i}`);
@@ -243,6 +253,7 @@
                         setTimeout(() => {
                             if (data.win) {
                                 juegoTerminado = true;
+
                                 for (let i = 0; i < 5; i++) {
                                     setTimeout(() => {
                                         const box = document.getElementById(`box-${filaActual}${i}`);
@@ -250,17 +261,21 @@
                                         setTimeout(() => box.classList.remove('-translate-y-3'), 150);
                                     }, i * 150);
                                 }
-                                //  VENTANA BONITA DE PUNTUACIÓN
+
+                                // ✅ CORRECCIÓN 1: intentosUsados y puntuacionFinal definidos
+                                const intentosUsados = filaActual + 1;
+                                const puntuacionFinal = (7 - intentosUsados) * 100;
+
                                 setTimeout(() => {
-                                    const mensajeHtml = `
+                                    mostrarModalFinal("¡HAS GANADO!", `
                                         <p class="text-gray-600 text-lg mb-6">Adivinada en <span class="font-bold text-[#700040]">${intentosUsados} ${intentosUsados === 1 ? 'intento' : 'intentos'}</span>.</p>
                                         <div class="bg-[#F6F8FA] border-2 border-[#E3E8EC] p-4 rounded-xl mb-8">
                                             <p class="text-xs text-gray-400 uppercase tracking-widest font-bold mb-1">Puntuación Total</p>
                                             <p class="text-6xl font-extrabold text-[#C9B458] font-bungee">${puntuacionFinal}</p>
                                         </div>
-                                    `;
-                                    mostrarModalFinal("¡HAS GANADO!", mensajeHtml);
+                                    `);
                                 }, 1500);
+
                                 setTimeout(() => {
                                     var duration = 3 * 1000;
                                     var end = Date.now() + duration;
@@ -270,12 +285,13 @@
                                         if (Date.now() < end) requestAnimationFrame(frame);
                                     }());
                                 }, 900);
+
                             } else if (filaActual === 5) {
                                 juegoTerminado = true;
                                 mostrarModalFinal("¡OH NO!", `
                                     <p class="text-gray-600 mb-6">Te has quedado sin intentos.</p>
                                     <p class="text-sm text-gray-400">La palabra era secreta... ¡vuelve a intentarlo mañana!</p>
-                                `)
+                                `);
                             }
 
                             filaActual++;
