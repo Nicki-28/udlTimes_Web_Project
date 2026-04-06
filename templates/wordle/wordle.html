@@ -6,6 +6,7 @@
     <title>Mi Pruebecita de Wordle</title>
 
     <link href="https://fonts.googleapis.com/css2?family=Bungee&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
 
     <script>
@@ -13,17 +14,17 @@
       theme: {
         extend: {
           fontFamily: {
-            bungee: ['Bungee', 'sans-serif'], // Fuente para el título
-            inter: ['Inter', 'sans-serif'],   // Fuente para el texto general
+            bungee: ['Bungee', 'sans-serif'],
+            inter: ['Inter', 'sans-serif'],
           },
           colors: {
-            udl: '#700040', // Color corporativo UdL
+            udl: '#700040',
             key: {
-                correct: '#700040', // Granate (Letra correcta en posición correcta)
-                present: '#C9B458', // Dorado (Letra correcta, posición incorrecta)
-                absent: '#787C7E',  // Gris (Letra que no está en la palabra)
-                default: '#E3E8EC', // Fondo de las teclas por defecto
-                hover: '#CBD5E1',   // Color al pasar el ratón por las teclas
+                correct: '#700040',
+                present: '#C9B458',
+                absent: '#787C7E',
+                default: '#E3E8EC',
+                hover: '#CBD5E1',
             }
           }
         }
@@ -32,7 +33,6 @@
     </script>
 
     <style>
-        /* Animación para voltear las casillas  */
         @keyframes flip {
             0% { transform: rotateX(0); }
             50% { transform: rotateX(90deg); opacity: 0.8; }
@@ -42,7 +42,6 @@
             animation: flip 0.6s ease-in-out;
         }
 
-        /* Animación para que la fila tiemble si hay un error */
         @keyframes shake {
             10%, 90% { transform: translate3d(-1px, 0, 0); }
             20%, 80% { transform: translate3d(2px, 0, 0); }
@@ -63,14 +62,82 @@
         <div id="keyboard" class="flex flex-col items-center gap-2 mt-7"></div>
     </div>
 
+    <div id="modal-ayuda" class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center hidden backdrop-blur-sm transition-opacity">
+        <div class="bg-white p-6 rounded-2xl shadow-2xl max-w-sm w-full mx-4 text-left relative font-inter">
+            <button onclick="cerrarAyuda()" class="absolute top-4 right-4 text-gray-400 hover:text-black transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
+
+            <h2 class="text-2xl font-extrabold mb-2 text-[#700040] font-bungee">Cómo Jugar</h2>
+            <p class="text-sm mb-4 text-gray-600">Adivina la palabra oculta en 6 intentos.</p>
+
+            <ul class="text-sm list-disc pl-5 mb-6 space-y-2 text-gray-700">
+                <li>Cada intento debe ser una palabra válida de 5 letras.</li>
+                <li>El color de las letras cambiará para mostrarte lo cerca que estás de acertar.</li>
+            </ul>
+
+            <div class="mb-4">
+                <p class="font-bold text-sm mb-3">Ejemplos</p>
+
+                <div class="flex gap-1.5 mb-2">
+                    <div class="w-10 h-10 bg-[#700040] text-white flex justify-center items-center font-bold text-xl uppercase rounded">N</div>
+                    <div class="w-10 h-10 border-2 border-gray-300 flex justify-center items-center font-bold text-xl uppercase rounded">A</div>
+                    <div class="w-10 h-10 border-2 border-gray-300 flex justify-center items-center font-bold text-xl uppercase rounded">C</div>
+                    <div class="w-10 h-10 border-2 border-gray-300 flex justify-center items-center font-bold text-xl uppercase rounded">H</div>
+                    <div class="w-10 h-10 border-2 border-gray-300 flex justify-center items-center font-bold text-xl uppercase rounded">O</div>
+                </div>
+                <p class="text-xs mb-4 text-gray-600">La letra <strong>N</strong> está en la palabra y en la posición correcta.</p>
+
+                <div class="flex gap-1.5 mb-2">
+                    <div class="w-10 h-10 border-2 border-gray-300 flex justify-center items-center font-bold text-xl uppercase rounded">M</div>
+                    <div class="w-10 h-10 bg-[#C9B458] text-white flex justify-center items-center font-bold text-xl uppercase rounded">I</div>
+                    <div class="w-10 h-10 border-2 border-gray-300 flex justify-center items-center font-bold text-xl uppercase rounded">R</div>
+                    <div class="w-10 h-10 border-2 border-gray-300 flex justify-center items-center font-bold text-xl uppercase rounded">E</div>
+                    <div class="w-10 h-10 border-2 border-gray-300 flex justify-center items-center font-bold text-xl uppercase rounded">T</div>
+                </div>
+                <p class="text-xs mb-4 text-gray-600">La letra <strong>I</strong> está en la palabra pero en la posición incorrecta.</p>
+
+                <div class="flex gap-1.5 mb-2">
+                    <div class="w-10 h-10 border-2 border-gray-300 flex justify-center items-center font-bold text-xl uppercase rounded">M</div>
+                    <div class="w-10 h-10 border-2 border-gray-300 flex justify-center items-center font-bold text-xl uppercase rounded">A</div>
+                    <div class="w-10 h-10 border-2 border-gray-300 flex justify-center items-center font-bold text-xl uppercase rounded">G</div>
+                    <div class="w-10 h-10 bg-[#787C7E] text-white flex justify-center items-center font-bold text-xl uppercase rounded">D</div>
+                    <div class="w-10 h-10 border-2 border-gray-300 flex justify-center items-center font-bold text-xl uppercase rounded">A</div>
+                </div>
+                <p class="text-xs text-gray-600">La letra <strong>D</strong> no está en la palabra.</p>
+            </div>
+        </div>
+    </div>
+
     <script>
         // VARIABLES DE ESTADO DEL JUEGO
-        let filaActual = 0; // Rastrea en qué intento (fila) estamos (0 a 5)
-        let colActual = 0;  // Rastrea en qué letra de la fila estamos (0 a 4)
-        let intentoActual = ""; // Guarda la palabra que se está escribiendo en el momento
+        let filaActual = 0;
+        let colActual = 0;
+        let intentoActual = "";
+        let juegoTerminado = false;
 
-        // FUNCIÓN DE SEGURIDAD PARA DJANGO
-        // Lee las cookies del navegador para obtener el token CSRF y permitir peticiones POST seguras.
+        // FUNCIONES DEL MODAL DE AYUDA
+        function abrirAyuda() {
+            document.getElementById('modal-ayuda').classList.remove('hidden');
+        }
+
+        function cerrarAyuda() {
+            document.getElementById('modal-ayuda').classList.add('hidden');
+        }
+
+        function mostrarModalFinal(mensaje) {
+            setTimeout(() => alert(mensaje), 500);
+        }
+
+        window.addEventListener('load', () => {
+            if (!localStorage.getItem('ayudaWordleVista')) {
+                abrirAyuda();
+                localStorage.setItem('ayudaWordleVista', 'true');
+            }
+        });
+
         function getCookie(name) {
             let cookieValue = null;
             if (document.cookie && document.cookie !== '') {
@@ -88,12 +155,9 @@
 
         // 1. GENERACIÓN DEL TABLERO
         const tablero = document.getElementById("tablero");
-        // Bucle para crear 6 filas
         for (let fila = 0; fila < 6; fila++) {
-            // Bucle interno para crear 5 columnas (casillas) por fila
             for (let col = 0; col < 5; col++) {
                 const casilla = document.createElement("div");
-                // Cada casilla recibe un ID único basado en su coordenada, ej: "box-00", "box-01"
                 casilla.id = `box-${fila}${col}`;
                 casilla.className = "w-14 h-14 border-2 border-gray-300 bg-white flex items-center justify-center text-2xl font-bold uppercase transition-all";
                 tablero.appendChild(casilla);
@@ -101,7 +165,6 @@
         }
 
         // 2. GENERACIÓN DEL TECLADO VIRTUAL
-        // Array bidimensional con la distribución típica de un teclado QWERTY
         const filasTeclado = [
             ["Q", "W", "E", "R", "T", "Y", "U", "I", "O", "P"],
             ["A", "S", "D", "F", "G", "H", "J", "K", "L", "Ñ"],
@@ -110,7 +173,6 @@
 
         const keyboard = document.getElementById("keyboard");
         filasTeclado.forEach((fila) => {
-            // Creamos un contenedor (fila) para cada conjunto de teclas
             const filaDiv = document.createElement("div");
             filaDiv.className = "flex gap-1.5 w-full justify-center";
 
@@ -118,131 +180,143 @@
                 const tecla = document.createElement("button");
                 tecla.id = `key-${letra}`;
 
-                // Clases base para todas las teclas
                 let clases = "h-14 flex items-center justify-center text-sm font-bold rounded-lg cursor-pointer transition-colors uppercase focus:outline-none ";
                 clases += "bg-key-default hover:bg-key-hover text-[#1A1A1A] ";
 
-                // Estilos específicos si la tecla es especial (ENTER o BORRAR)
                 if (letra === "ENTER" || letra === "DEL") {
                     clases += "px-4 min-w-[70px] bg-[#E3E8EC] border-[#BFC3C7] ";
-                    if(letra === "ENTER") clases += "text-[10px] ";
+                    if (letra === "ENTER") clases += "text-[10px] ";
                 } else {
-                    clases += "w-11"; // Ancho normal para las letras
+                    clases += "w-11";
                 }
 
                 tecla.className = clases;
-                // Si la letra es DEL, muestra el icono de borrar, si no, la letra
                 tecla.innerText = letra === "DEL" ? "⌫" : letra;
-                // Al hacer clic, ejecuta la función principal del juego
                 tecla.onclick = () => manejarEntrada(letra);
                 filaDiv.appendChild(tecla);
             });
-            keyboard.appendChild(filaDiv); // Añadimos la fila completa al teclado
+            keyboard.appendChild(filaDiv);
         });
 
-        // 3. LÓGICA CENTRAL DEL JUEGO (Manejo de teclas y envíos)
+        // 3. LÓGICA CENTRAL DEL JUEGO
         function manejarEntrada(letra) {
+            if (juegoTerminado) return;
 
-            // ACCIÓN: BORRAR LETRA
             if (letra === "DEL") {
-                // Solo podemos borrar si no estamos en la primera columna
                 if (colActual > 0) {
-                    colActual--; // Retrocedemos una columna
-                    intentoActual = intentoActual.slice(0, -1); // Quitamos la última letra de nuestro string
-                    // Vaciamos visualmente la casilla
+                    colActual--;
+                    intentoActual = intentoActual.slice(0, -1);
                     document.getElementById(`box-${filaActual}${colActual}`).innerText = "";
                 }
 
-            // ACCIÓN: ENVIAR PALABRA
             } else if (letra === "ENTER") {
-                // Solo enviamos si el jugador ha rellenado las 5 letras
                 if (intentoActual.length === 5) {
-                    console.log("Validando palabra:", intentoActual);
-
-                    // Petición al Backend para comprobar la palabra
                     fetch('/wordle/check-guess/', {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
-                            'X-CSRFToken': getCookie('csrftoken') // El sello de seguridad
+                            'X-CSRFToken': getCookie('csrftoken')
                         },
-                        body: JSON.stringify({ guess: intentoActual }) // Mandamos la palabra en JSON
+                        body: JSON.stringify({ guess: intentoActual })
                     })
                     .then(response => response.json())
                     .then(data => {
-                        // Diccionario que traduce la respuesta del servidor a clases de Tailwind
                         const coloresTailwind = {
-                            'correct': 'bg-key-correct text-white border-key-correct', // Granate
-                            'present': 'bg-key-present text-white border-key-present', // Dorado
-                            'absent': 'bg-key-absent text-white border-key-absent'     // Gris
+                            'correct': 'bg-key-correct text-white border-key-correct',
+                            'present': 'bg-key-present text-white border-key-present',
+                            'absent': 'bg-key-absent text-white border-key-absent'
                         };
 
-                        // Bucle para pintar las 5 casillas de la fila actual basándonos en la respuesta
+                        const tiempoTotalAnimacion = 5 * 550 + 600;
+
                         for (let i = 0; i < 5; i++) {
                             const casilla = document.getElementById(`box-${filaActual}${i}`);
-                            const colorEstado = data.colors[i]; // Sacamos el estado ('correct', 'present' o 'absent')
-
-                            // Le quitamos el fondo blanco inicial y aplicamos los colores definitivos
-                            casilla.className = `w-14 h-14 flex items-center justify-center text-2xl font-bold uppercase transition-all duration-500 ${coloresTailwind[colorEstado]}`;
+                            const colorEstado = data.colors[i];
+                            setTimeout(() => {
+                                casilla.classList.add('anim-flip');
+                                setTimeout(() => {
+                                    casilla.className = `w-14 h-14 flex items-center justify-center text-2xl font-bold uppercase transition-all duration-500 ${coloresTailwind[colorEstado]}`;
+                                }, 600);
+                            }, i * 600);
                         }
 
-                        // Comprobación de final de partida
-                        if (data.win) {
-                            setTimeout(() => alert("¡HAS GANADO! 🎉"), 500); // Retraso de medio segundo para que de tiempo a ver los colores
-                        } else if (filaActual === 5) { // Ojo: la última fila es la 5 (índices del 0 al 5 son 6 filas)
-                            setTimeout(() => alert("¡Oh no! Te has quedado sin intentos."), 500);
-                        }
+                        setTimeout(() => {
+                            if (data.win) {
+                                juegoTerminado = true;
+                                for (let i = 0; i < 5; i++) {
+                                    setTimeout(() => {
+                                        const box = document.getElementById(`box-${filaActual}${i}`);
+                                        box.classList.add('-translate-y-3');
+                                        setTimeout(() => box.classList.remove('-translate-y-3'), 150);
+                                    }, i * 150);
+                                }
+                                //  VENTANA BONITA DE PUNTUACIÓN
+                                setTimeout(() => {
+                                    const mensajeHtml = `
+                                        <p class="text-gray-600 text-lg mb-6">Adivinada en <span class="font-bold text-[#700040]">${intentosUsados} ${intentosUsados === 1 ? 'intento' : 'intentos'}</span>.</p>
+                                        <div class="bg-[#F6F8FA] border-2 border-[#E3E8EC] p-4 rounded-xl mb-8">
+                                            <p class="text-xs text-gray-400 uppercase tracking-widest font-bold mb-1">Puntuación Total</p>
+                                            <p class="text-6xl font-extrabold text-[#C9B458] font-bungee">${puntuacionFinal}</p>
+                                        </div>
+                                    `;
+                                    mostrarModalFinal("¡HAS GANADO!", mensajeHtml);
+                                }, 1500);
+                                setTimeout(() => {
+                                    var duration = 3 * 1000;
+                                    var end = Date.now() + duration;
+                                    (function frame() {
+                                        confetti({ particleCount: 3, angle: 60, spread: 55, origin: { x: 0, y: 0.8 } });
+                                        confetti({ particleCount: 3, angle: 120, spread: 55, origin: { x: 1, y: 0.8 } });
+                                        if (Date.now() < end) requestAnimationFrame(frame);
+                                    }());
+                                }, 900);
+                            } else if (filaActual === 5) {
+                                juegoTerminado = true;
+                                mostrarModalFinal("¡OH NO!", `
+                                    <p class="text-gray-600 mb-6">Te has quedado sin intentos.</p>
+                                    <p class="text-sm text-gray-400">La palabra era secreta... ¡vuelve a intentarlo mañana!</p>
+                                `)
+                            }
 
-                        // Preparamos las variables para el siguiente turno
-                        filaActual++;
-                        colActual = 0;
-                        intentoActual = "";
+                            filaActual++;
+                            colActual = 0;
+                            intentoActual = "";
+                        }, tiempoTotalAnimacion);
                     })
-
+                    .catch(error => console.error("Error de conexión:", error));
                 }
 
-            // ACCIÓN: ESCRIBIR LETRA
-            // Si no es DEL ni ENTER, hay espacio en la fila, y el input es de 1 solo carácter
             } else if (intentoActual.length < 5 && letra.length === 1) {
                 const casilla = document.getElementById(`box-${filaActual}${colActual}`);
-                casilla.innerText = letra; // Escribimos visualmente la letra
-
-                // Efecto "pop" al escribir la letra (se agranda un poquito)
+                casilla.innerText = letra;
                 casilla.classList.add("scale-110", "border-slate-500");
-                setTimeout(() => {
-                    casilla.classList.remove("scale-110", "border-slate-500");
-                }, 100);
-
-                intentoActual += letra; // Añadimos la letra al string interno
-                colActual++; // Avanzamos a la siguiente columna
+                setTimeout(() => casilla.classList.remove("scale-110", "border-slate-500"), 100);
+                intentoActual += letra;
+                colActual++;
             }
         }
 
-        // 4. LISTENER PARA EL TECLADO FÍSICO DEL ORDENADOR
+        // 4. LISTENER TECLADO FÍSICO
         window.addEventListener('keydown', (e) => {
-            // Mapeamos las pulsaciones físicas para que llamen a la misma función del teclado virtual
             if (e.key === 'Enter') manejarEntrada('ENTER');
             else if (e.key === 'Backspace') manejarEntrada('DEL');
             else if (e.key.length === 1 && e.key.match(/[a-zñ]/i)) manejarEntrada(e.key.toUpperCase());
         });
 
-        // 5. INICIALIZADOR AUTOMÁTICO AL CARGAR LA PÁGINA
-        // Le avisa a Django de que el usuario ha entrado, forzándolo a generar la palabra del día en la base de datos
+        // 5. INICIALIZADOR
         fetch('/wordle/daily/', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
                 'X-CSRFToken': getCookie('csrftoken')
             },
-            body: JSON.stringify({ username: "nicole" }) // Hardcodeado a nicole temporalmente
+            body: JSON.stringify({ username: "nicole" })
         })
         .then(response => response.json())
         .then(data => {
-            console.log("Respuesta del servidor al iniciar:", data);
             if (data.status === "200") {
                 console.log("Palabra generada con éxito. ¡A jugar!");
             } else if (data.status === "409") {
-                // Si recibe un 409, significa que este usuario ya tiene una partida completada hoy
                 alert("Ya has jugado hoy. ¡Vuelve mañana!");
             } else {
                 console.error("Error del servidor:", data.mssg);
