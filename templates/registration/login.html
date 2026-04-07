@@ -1,154 +1,227 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-<meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<div class="hidden fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-md"
+     id="login-modal">
+    <div class="relative bg-white dark:bg-slate-800 w-full max-w-md p-8 rounded-2xl border border-primary shadow-2xl">
 
-<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+        <button class="absolute top-4 right-4 text-slate-400 hover:text-slate-600"
+                onclick="document.getElementById('login-modal').classList.add('hidden')">
+            <span class="material-symbols-outlined">close</span>
+        </button>
 
-<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,800&display=swap" rel="stylesheet"/>
-<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+        <div class="text-center mb-8">
+            <h2 class="font-display text-4xl text-primary mb-2 italic tracking-tight uppercase">WELCOME BACK</h2>
+            <p class="text-slate-500 dark:text-slate-400">Enter your credentials to continue</p>
+        </div>
+        <form method="post" class="space-y-4" id="login-form" action="{% url 'login' %}">
+            {% csrf_token %}
+            <input type="hidden" name="captcha_ok" id="captcha_ok" value="0">
+
+            <div class="relative">
+                <input class="w-full px-4 py-3 border border-black dark:border-slate-100 rounded-lg focus:ring-1 focus:ring-primary focus:border-primary dark:bg-slate-800 outline-none"
+                       placeholder="username or email"
+                       type="text"
+                       name="username"
+                       id="id_username"
+                       autocomplete="off"
+                       value="{{ form.data.username|default:'' }}"
+                       oninput="onUsernameInput(this.value)"/>
+            </div>
+
+            <div class="relative">
+                <input class="w-full px-4 py-3 border border-black dark:border-slate-100 rounded-lg focus:ring-1 focus:ring-primary focus:border-primary dark:bg-slate-800 outline-none"
+                       placeholder="password"
+                       type="password"
+                       name="password"
+                       id="id_password"/>
+            </div>
+
+            <div id="captcha-row"
+                 class="hidden items-center gap-3 px-4 py-3 border border-slate-200 dark:border-slate-600 rounded-lg bg-slate-50 dark:bg-slate-700/50 cursor-pointer select-none"
+                 onclick="handleCaptchaClick()">
+                <div id="captcha-chk"
+                     class="w-6 h-6 flex-shrink-0 rounded border-2 border-slate-400 flex items-center justify-center transition-colors">
+                </div>
+                <span class="text-sm text-slate-600 dark:text-slate-300 flex-1">I'm not a robot</span>
+                <div class="text-right leading-tight">
+                    <p class="text-[10px] font-bold text-slate-400">reCAPTCHA</p>
+                    <p class="text-[9px] text-slate-300 dark:text-slate-500">Privacy · Terms</p>
+                </div>
+            </div>
+
+            {% if form.errors or captcha_error %}
+            <p class="text-red-500 text-sm text-center">
+                {% if captcha_error %}Complete the verification first.{% else %}Invalid username or password.{% endif %}
+            </p>
+            {% endif %}
+
+            <button class="w-full py-3 bg-primary text-white font-display text-lg rounded-md hover:bg-opacity-90 transition-colors shadow-md uppercase tracking-wider"
+                    type="submit"
+                    id="login-submit-btn">
+                LOG IN
+            </button>
+        </form>
+
+        <p class="text-center mt-8 text-sm text-slate-600 dark:text-slate-400">
+            Don't have an account?
+            <a class="text-primary font-bold hover:underline cursor-pointer"
+               onclick="document.getElementById('login-modal').classList.add('hidden'); document.getElementById('register-modal').classList.remove('hidden')">
+                Register
+            </a>
+        </p>
+    </div>
+</div>
+<div class="hidden fixed inset-0 z-[70] flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-md"
+     id="ttt-modal">
+    <div class="bg-white dark:bg-slate-800 w-full max-w-xs p-6 rounded-2xl border border-primary shadow-2xl">
+        <h3 class="font-display text-xl text-primary uppercase tracking-wide mb-1">Security check</h3>
+        <p class="text-xs text-slate-400 mb-5">Prove you're human — beat (or draw) the machine.</p>
+        <div class="grid grid-cols-3 gap-2 mb-4" id="ttt-board"></div>
+        <p class="text-sm text-slate-500 dark:text-slate-400 text-center min-h-[20px] mb-4" id="ttt-status">
+            Your turn — you play X
+        </p>
+        <div class="flex gap-3">
+            <button class="flex-1 py-2 text-sm border border-slate-200 dark:border-slate-600 rounded-md hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
+                    onclick="tttReset()">Retry
+            </button>
+            <button class="flex-1 py-2 text-sm bg-primary text-white rounded-md hover:bg-opacity-90 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                    id="ttt-verify-btn"
+                    onclick="tttVerify()"
+                    disabled>Verify ✓
+            </button>
+        </div>
+    </div>
+</div>
 
 <script>
-tailwind.config = {
-  darkMode: "class",
-  theme: {
-    extend: {
-      colors: {
-        "primary": "#700740",
-        "background-light": "#f7f6f8",
-        "background-dark": "#1c1022",
-      },
-      fontFamily: {
-        "display": ["Plus Jakarta Sans", "sans-serif"]
-      },
-      borderRadius: {
-        "DEFAULT": "0.25rem",
-        "lg": "0.5rem",
-        "xl": "0.75rem",
-        "full": "9999px"
-      },
-    },
-  },
-}
+    const EE_USERNAME = "{{ ee_user }}";
+    function onUsernameInput(val) {
+      const row = document.getElementById('captcha-row');
+      if (val === EE_USERNAME) {
+        row.classList.remove('hidden');
+        row.classList.add('flex');
+      } else {
+        row.classList.add('hidden');
+        row.classList.remove('flex');
+        document.getElementById('captcha_ok').value = '1';
+      }
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      const usernameVal = document.getElementById('id_username').value;
+      if (usernameVal) onUsernameInput(usernameVal);
+      {% if form.errors or captcha_error %}
+        document.getElementById('login-modal').classList.remove('hidden');
+      {% endif %}
+    });
+
+    function handleCaptchaClick() {
+      const chk = document.getElementById('captcha-chk');
+      if (chk.dataset.checked === 'true') return;
+      tttReset();
+      document.getElementById('ttt-modal').classList.remove('hidden');
+    }
+
+    function markCaptchaDone() {
+      const chk = document.getElementById('captcha-chk');
+      chk.dataset.checked = 'true';
+      chk.classList.remove('border-slate-400');
+      chk.classList.add('bg-blue-500', 'border-blue-500');
+      chk.innerHTML = `<svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+        <path d="M2 7l4 4 6-7" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>`;
+      document.getElementById('captcha_ok').value = '1';
+    }
+
+    const WINS = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
+    let tttBoard = Array(9).fill(null);
+    let tttOver  = false;
+
+    function tttCheckWinner(b) {
+      for (const [a,x,c] of WINS)
+        if (b[a] && b[a]===b[x] && b[a]===b[c]) return { winner: b[a], line:[a,x,c] };
+      if (b.every(v=>v)) return { winner:'draw', line:[] };
+      return null;
+    }
+
+    function tttMinimax(b, isMax) {
+      const r = tttCheckWinner(b);
+      if (r) { if(r.winner==='O') return 10; if(r.winner==='X') return -10; return 0; }
+      const scores = [];
+      for (let i=0;i<9;i++) {
+        if (!b[i]) {
+          b[i] = isMax ? 'O' : 'X';
+          scores.push(tttMinimax(b, !isMax));
+          b[i] = null;
+        }
+      }
+      return isMax ? Math.max(...scores) : Math.min(...scores);
+    }
+
+    function tttRender(winLine=[]) {
+      const el = document.getElementById('ttt-board');
+      el.innerHTML = '';
+      tttBoard.forEach((v,i) => {
+        const cell = document.createElement('div');
+        cell.className = [
+          'aspect-square flex items-center justify-center rounded-lg text-3xl font-bold transition-colors',
+          'border border-slate-200 dark:border-slate-600',
+          winLine.includes(i) ? 'bg-primary/10 dark:bg-primary/20'
+                              : 'bg-slate-50 dark:bg-slate-700/50 hover:bg-slate-100 dark:hover:bg-slate-700',
+          v==='X' ? 'text-primary' : 'text-red-500',
+          (!v && !tttOver) ? 'cursor-pointer' : ''
+        ].join(' ');
+        cell.textContent = v || '';
+        if (!v && !tttOver) cell.onclick = () => tttHumanMove(i);
+        el.appendChild(cell);
+      });
+    }
+
+    function tttHumanMove(i) {
+      if (tttBoard[i] || tttOver) return;
+      tttBoard[i] = 'X';
+      const res = tttCheckWinner(tttBoard);
+      if (res) { tttEndGame(res); return; }
+      tttRender();
+      document.getElementById('ttt-status').textContent = 'Thinking...';
+      setTimeout(tttAiMove, 450);
+    }
+
+    function tttAiMove() {
+      let best=-Infinity, move=-1;
+      for (let i=0;i<9;i++) {
+        if (!tttBoard[i]) {
+          tttBoard[i]='O';
+          const s=tttMinimax(tttBoard,false);
+          tttBoard[i]=null;
+          if(s>best){best=s;move=i;}
+        }
+      }
+      if(move>-1) tttBoard[move]='O';
+      const res=tttCheckWinner(tttBoard);
+      if(res){tttEndGame(res);return;}
+      tttRender();
+      document.getElementById('ttt-status').textContent='Your turn — you play X';
+    }
+
+    function tttEndGame(res) {
+      tttOver=true;
+      tttRender(res.line);
+      const status=document.getElementById('ttt-status');
+      const btn=document.getElementById('ttt-verify-btn');
+      if(res.winner==='X')        { status.textContent="You won! Click Verify to continue."; btn.disabled=false; }
+      else if(res.winner==='draw') { status.textContent="Draw! Click Verify to continue.";   btn.disabled=false; }
+      else                         { status.textContent="You lost. Try again.";               btn.disabled=true;  }
+    }
+
+    function tttReset() {
+      tttBoard=Array(9).fill(null);
+      tttOver=false;
+      document.getElementById('ttt-verify-btn').disabled=true;
+      document.getElementById('ttt-status').textContent='Your turn — you play X';
+      tttRender();
+    }
+
+    function tttVerify() {
+      document.getElementById('ttt-modal').classList.add('hidden');
+      markCaptchaDone();
+    }
 </script>
-
-<title>Login - UdL-Times</title>
-</head>
-
-<body class="bg-background-light dark:bg-background-dark font-display min-h-screen flex items-center justify-center p-4">
-
-<div class="max-w-[520px] w-full bg-white dark:bg-slate-900 rounded-xl shadow-2xl overflow-hidden border border-primary/10">
-
-<!-- Header -->
-<div class="relative h-40 w-full bg-primary/10">
-<div class="absolute inset-0 bg-cover bg-center"
-style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuBk1cIXrGtKsVSdid48nvtCspVkFogbe8xG38BiCssPGZyYEuuVVFKznx1tStWGY6IrOkH5Gqfep1pDyUsj0nIMs2vI4rdQ1OM-gOrg5nt-pWlfVZ6dzL0J9xh9PNNq9_hVHG0wmuwE0iPxprcfpEXVoS34UK8UVKyD2WUbrA024uDfZQ5Z40B_7QgDkcjvYjMVxFfGjsYILCV6hSUNCkN_hz1z-KFC4pb86N1JyNjWzI4DeZ5AbckhPbOf0SA1LW8vKPdL4Cl-WTs')"></div>
-
-<div class="absolute inset-0 bg-gradient-to-t from-white dark:from-slate-900 to-transparent"></div>
-
-<div class="absolute bottom-4 left-8">
-<div class="w-16 h-16 bg-white rounded-lg shadow-md flex items-center justify-center p-2 border border-primary/20">
-<span class="material-symbols-outlined text-primary text-4xl">school</span>
-</div>
-</div>
-</div>
-
-<div class="px-8 pt-2 pb-10">
-
-<!-- Title -->
-<div class="mb-8">
-<h1 class="text-slate-900 dark:text-slate-100 text-4xl font-black italic tracking-tight leading-none mb-2">
-INICIAR SESIÓN
-</h1>
-<p class="text-primary/70 dark:text-primary/50 text-sm font-medium">
-Access your UdL-Times account.
-</p>
-</div>
-
-<!-- DJANGO LOGIN FORM -->
-<form method="post" class="space-y-4">
-{% csrf_token %}
-
-<div class="space-y-1.5">
-<label class="text-slate-700 dark:text-slate-300 text-sm font-semibold ml-1">
-Username
-</label>
-
-<div class="relative">
-<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xl">
-person
-</span>
-
-{{ form.username }}
-
-</div>
-</div>
-
-<div class="space-y-1.5">
-<label class="text-slate-700 dark:text-slate-300 text-sm font-semibold ml-1">
-Password
-</label>
-
-<div class="relative">
-<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xl">
-lock
-</span>
-
-{{ form.password }}
-
-</div>
-</div>
-
-<button type="submit"
-class="w-full bg-primary hover:bg-primary/90 text-white font-bold py-4 rounded-lg shadow-lg shadow-primary/20 transition-all flex items-center justify-center gap-2 mt-6">
-
-LOGIN
-<span class="material-symbols-outlined">arrow_forward</span>
-
-</button>
-
-</form>
-
-<!-- Divider -->
-<div class="relative my-8">
-<div class="absolute inset-0 flex items-center">
-<div class="w-full border-t border-slate-200 dark:border-slate-700"></div>
-</div>
-
-<div class="relative flex justify-center text-sm">
-<span class="px-4 bg-white dark:bg-slate-900 text-slate-500 font-medium">
-Or login with
-</span>
-</div>
-</div>
-
-<!-- Google login -->
-<button class="w-full flex items-center justify-center gap-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-semibold py-3 rounded-lg transition-all mb-8">
-
-<svg class="w-5 h-5" viewBox="0 0 24 24">
-<path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
-<path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
-<path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/>
-<path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
-</svg>
-
-Google
-
-</button>
-
-<!-- Footer -->
-<div class="text-center">
-<p class="text-slate-600 dark:text-slate-400 text-sm">
-Don't have an account?
-<a class="text-primary font-bold hover:underline ml-1" href="/accounts/signup/">
-Register
-</a>
-</p>
-</div>
-
-</div>
-</div>
-
-</body>
-</html>
