@@ -1,129 +1,73 @@
-<!DOCTYPE html>
-<html lang="en"><head>
-<meta charset="utf-8"/>
-<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-<title>UdL-Times | Framed</title>
-<link href="https://fonts.googleapis.com" rel="preconnect"/>
-<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
-<link href="https://fonts.googleapis.com/css2?family=Bungee&amp;family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
-<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
-<script src="https://cdn.tailwindcss.com?plugins=forms,typography,container-queries"></script>
-<script>
-        tailwind.config = {
-            darkMode: "class",
-            theme: {
-                extend: {
-                    colors: {
-                        primary: "#700040", // University Purple
-                        "background-light": "#f8fafc",
-                        "background-dark": "#0f172a",
-                        secondary: "#f59e0b",
-                    },
-                    fontFamily: {
-                        display: ["Bungee", "cursive"],
-                        sans: ["Inter", "sans-serif"],
-                    },
-                    borderRadius: {
-                        DEFAULT: "0.75rem",
-                    },
-                },
-            },
-        };
-    </script>
-<style type="text/tailwindcss">
-        .grid-pattern {
-            background-image: radial-gradient(circle, #00000010 1px, transparent 1px);
-            background-size: 20px 20px;
-        }
-        .dark .grid-pattern {
-            background-image: radial-gradient(circle, #ffffff10 1px, transparent 1px);
-        }
-        .neo-shadow {
-            box-shadow: 8px 8px 0px 0px rgba(112, 0, 64, 1);
-        }
-    </style>
-</head>
-<body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 min-h-screen font-sans grid-pattern">
-<header class="sticky top-0 z-50 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800">
-<div class="max-w-7xl mx-auto px-4 h-20 flex items-center justify-between">
-<div class="flex items-center gap-4 cursor-pointer" onclick="window.location.reload()">
-<div class="flex flex-col items-center">
-<span class="material-symbols-outlined text-primary text-3xl">school</span>
-<span class="text-[8px] font-bold leading-none dark:text-slate-400">UdL</span>
-</div>
-<h1 class="font-display text-2xl tracking-tighter text-primary">UDL-TIMES</h1>
-</div>
-<div class="flex items-center gap-6">
-<div class="hidden md:flex gap-4 font-display text-xs">
-<span class="text-primary border-b-2 border-primary">FRAMED</span>
-<span class="text-slate-400 hover:text-primary transition-colors cursor-pointer">WORDLE</span>
-<span class="text-slate-400 hover:text-primary transition-colors cursor-pointer">CONNECTIONS</span>
-</div>
-<button class="px-6 py-2 border-2 border-primary text-primary hover:bg-primary hover:text-white font-bold transition-all duration-200 rounded-full">
-                    LOG IN
-                </button>
-</div>
-</div>
-</header>
-<main class="max-w-3xl mx-auto px-4 py-8 md:py-12">
-<div class="text-center mb-8">
-<h2 class="font-display text-4xl mb-2 flex items-center justify-center gap-3">
-<span class="material-symbols-outlined text-primary text-4xl">videocam</span>
-                FRAMED
-            </h2>
-<p class="text-slate-500 font-medium">Guess the movie from the frames</p>
-</div>
-<div class="relative bg-black aspect-video rounded-xl overflow-hidden border-4 border-slate-900 dark:border-slate-700 shadow-xl mb-8 group">
-<img alt="Current Movie Frame" class="w-full h-full object-cover opacity-90 group-hover:opacity-100 transition-opacity" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCmtPSJdscV2H8sxlE4Qyp74ZjRrcnolUTvS2KRyxnBAwrIVh3vCLRy_TFA7_4jTtX5nXxFXZh3RsHq7jTxXPPeAiQ0u0x4dHVb0qAyIw0mXk1PlOFPSlHkKO_UJa0C1rxFG1a6ldcAo_L9gOr_YREdwcFgywzBOP8XZa4WJpYGa7YkRYwligQ5zhwrRokALH2-qbfwIZQBFvVQROb1aSam1azVEXjbjKPIi9e2oJJ8M-4ndGT0TFOua-86idBR687agsQSDaxLzrc"/>
-<div class="absolute bottom-4 right-4 bg-primary text-white px-3 py-1 rounded-md font-display text-xs tracking-widest">
-                FRAME 1 / 6
-            </div>
-</div>
-<div class="flex justify-center gap-2 mb-8">
-<div class="w-full h-2 bg-primary rounded-full"></div>
-<div class="w-full h-2 bg-slate-200 dark:bg-slate-700 rounded-full"></div>
-<div class="w-full h-2 bg-slate-200 dark:bg-slate-700 rounded-full"></div>
-<div class="w-full h-2 bg-slate-200 dark:bg-slate-700 rounded-full"></div>
-<div class="w-full h-2 bg-slate-200 dark:bg-slate-700 rounded-full"></div>
-<div class="w-full h-2 bg-slate-200 dark:bg-slate-700 rounded-full"></div>
-</div>
-<div class="space-y-2 mb-8">
-<div class="h-12 border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-lg flex items-center px-4 text-slate-400 text-sm italic italic">
-                First guess...
-            </div>
-</div>
-<div class="space-y-4">
-<div class="relative">
-<input class="w-full h-14 px-6 border-2 border-slate-900 dark:border-slate-100 rounded-xl bg-white dark:bg-slate-800 focus:ring-4 focus:ring-primary/20 focus:border-primary outline-none transition-all font-medium text-lg" placeholder="Enter movie title..." type="text"/>
-<div class="absolute right-4 top-1/2 -translate-y-1/2 flex items-center gap-2">
-<span class="material-symbols-outlined text-slate-400">search</span>
-</div>
-</div>
-<div class="flex gap-3">
-<button class="flex-1 py-4 bg-primary text-white font-display text-xl rounded-xl hover:bg-opacity-90 transition-all active:scale-[0.98] shadow-lg">
-                    SUBMIT
-                </button>
-<button class="px-8 py-4 border-2 border-slate-900 dark:border-slate-100 font-display text-xl rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
-                    SKIP
-                </button>
-</div>
-</div>
-<div class="mt-12 p-6 bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 rounded-xl">
-<h3 class="font-display text-sm text-primary mb-3">HOW TO PLAY</h3>
-<ul class="text-sm space-y-2 text-slate-600 dark:text-slate-400">
-<li class="flex gap-2">
-<span class="font-bold text-primary">1.</span> Guess the movie from 6 frames.
-                </li>
-<li class="flex gap-2">
-<span class="font-bold text-primary">2.</span> Each wrong guess or skip reveals a new frame.
-                </li>
-<li class="flex gap-2">
-<span class="font-bold text-primary">3.</span> Use the purple UdL branding to guide your victory!
-                </li>
-</ul>
-</div>
-</main>
-<div class="fixed -bottom-10 -left-10 w-40 h-40 bg-primary/10 rounded-full blur-3xl pointer-events-none"></div>
-<div class="fixed top-1/2 -right-10 w-32 h-32 bg-secondary/10 rounded-full blur-3xl pointer-events-none"></div>
+{% extends "base.html" %}
 
-</body></html>
+{% block title %}UdL-Times | University Gaming Hub{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto px-4 py-8 md:py-12">
+    <div class="text-center mb-8">
+        <h2 class="font-display text-4xl mb-2 flex items-center justify-center gap-3">
+            <span class="material-symbols-outlined text-primary text-4xl">videocam</span>
+            FRAMED
+        </h2>
+        <p class="text-slate-500 font-medium">Guess the movie from the frames</p>
+    </div>
+    <div
+        class="relative bg-black aspect-video rounded-xl overflow-hidden border-4 border-slate-900 dark:border-slate-700 shadow-xl mb-8 group">
+        <img alt="Current Movie Frame"
+            class="w-full h-full object-cover opacity-90 group-hover:opacity-100 transition-opacity"
+            src="https://lh3.googleusercontent.com/aida-public/AB6AXuCmtPSJdscV2H8sxlE4Qyp74ZjRrcnolUTvS2KRyxnBAwrIVh3vCLRy_TFA7_4jTtX5nXxFXZh3RsHq7jTxXPPeAiQ0u0x4dHVb0qAyIw0mXk1PlOFPSlHkKO_UJa0C1rxFG1a6ldcAo_L9gOr_YREdwcFgywzBOP8XZa4WJpYGa7YkRYwligQ5zhwrRokALH2-qbfwIZQBFvVQROb1aSam1azVEXjbjKPIi9e2oJJ8M-4ndGT0TFOua-86idBR687agsQSDaxLzrc" />
+        <div
+            class="absolute bottom-4 right-4 bg-primary text-white px-3 py-1 rounded-md font-display text-xs tracking-widest">
+            FRAME 1 / 6
+        </div>
+    </div>
+    <div class="flex justify-center gap-2 mb-8">
+        <div class="w-full h-2 bg-primary rounded-full"></div>
+        <div class="w-full h-2 bg-slate-200 dark:bg-slate-700 rounded-full"></div>
+        <div class="w-full h-2 bg-slate-200 dark:bg-slate-700 rounded-full"></div>
+        <div class="w-full h-2 bg-slate-200 dark:bg-slate-700 rounded-full"></div>
+        <div class="w-full h-2 bg-slate-200 dark:bg-slate-700 rounded-full"></div>
+        <div class="w-full h-2 bg-slate-200 dark:bg-slate-700 rounded-full"></div>
+    </div>
+    <div class="space-y-2 mb-8">
+        <div
+            class="h-12 border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-lg flex items-center px-4 text-slate-400 text-sm italic">
+            First guess...
+        </div>
+    </div>
+    <div class="space-y-4">
+        <div class="relative">
+            <input
+                class="w-full h-14 px-6 border-2 border-slate-900 dark:border-slate-100 rounded-xl bg-white dark:bg-slate-800 focus:ring-4 focus:ring-primary/20 focus:border-primary outline-none transition-all font-medium text-lg"
+                placeholder="Enter movie title..." type="text" />
+            <div class="absolute right-4 top-1/2 -translate-y-1/2 flex items-center gap-2">
+                <span class="material-symbols-outlined text-slate-400">search</span>
+            </div>
+        </div>
+        <div class="flex gap-3">
+            <button
+                class="flex-1 py-4 bg-primary text-white font-display text-xl rounded-xl hover:bg-opacity-90 transition-all active:scale-[0.98] shadow-lg">
+                SUBMIT
+            </button>
+            <button
+                class="px-8 py-4 border-2 border-slate-900 dark:border-slate-100 font-display text-xl rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+                SKIP
+            </button>
+        </div>
+    </div>
+    <div class="mt-12 p-6 bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 rounded-xl">
+        <h3 class="font-display text-sm text-primary mb-3">HOW TO PLAY</h3>
+        <ul class="text-sm space-y-2 text-slate-600 dark:text-slate-400">
+            <li class="flex gap-2">
+                <span class="font-bold text-primary">1.</span> Guess the movie from 6 frames.
+            </li>
+            <li class="flex gap-2">
+                <span class="font-bold text-primary">2.</span> Each wrong guess or skip reveals a new frame.
+            </li>
+            <li class="flex gap-2">
+                <span class="font-bold text-primary">3.</span> Use the purple UdL branding to guide your victory!
+            </li>
+        </ul>
+    </div>
+</div>
+{% endblock %}
