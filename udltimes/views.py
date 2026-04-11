@@ -10,6 +10,11 @@ from django.db.models import Count, Q
 from udltimes.models import StatsWordle, StatsFramed, StatsConnections
 from django.conf import settings
 
+#provisional imports
+import json
+import os
+from django.http import JsonResponse
+
 
 def wordle_view(request):
     return render(request, 'wordle.html')
@@ -226,3 +231,17 @@ class SignUpView(CreateView):
     form_class = UserCreationForm
     template_name = 'registration/signup.html'
     success_url = reverse_lazy('login')
+
+def framed_autocomplete(request): #privisionalmente leemos el json con palabras -> autocompletado
+    query = request.GET.get('term', '').lower()
+    results = []
+
+    if query:
+
+        provisional_path = os.path.join(settings.BASE_DIR, 'udltimes/apps/framed/framed_answers.json')
+
+        with open(provisional_path, encoding='utf-8') as f:
+            all_answers = json.load(f)
+            results = [m for m in all_answers if query in m.lower()][:10]
+
+    return JsonResponse(results, safe=False)

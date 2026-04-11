@@ -17,7 +17,7 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 
-from udltimes.views import SignUpView, home, wordle_view, connections_view, framed_view, register_view, login_view, profile_view
+from udltimes.views import SignUpView, home, wordle_view, connections_view, framed_view, register_view, login_view, profile_view, framed_autocomplete
 from django.contrib.auth.views import LogoutView
 
 urlpatterns = [
@@ -31,4 +31,5 @@ urlpatterns = [
     path("accounts/register/", register_view, name="register"),
     path('accounts/logout/', LogoutView.as_view(next_page='home'), name='logout'),
     path('profile/', profile_view, name='profile'),
+    path('framed/movie-autocomplete/', framed_autocomplete, name='framed autocomplete'),
 ]
