@@ -1,14 +1,17 @@
-from django.contrib.auth.decorators import login_required
-from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
+import re
+
+from django.conf import settings
 from django.contrib.auth import login, update_session_auth_hash
-from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth.forms import AuthenticationForm, UserCreationForm
 from django.contrib.auth.models import User
-from django.shortcuts import render, redirect
+from django.db.models import Count, Q
+from django.http import JsonResponse
+from django.shortcuts import redirect, render
 from django.urls import reverse_lazy
 from django.views.generic import CreateView
-from django.db.models import Count, Q
-from udltimes.models import StatsWordle, StatsFramed, StatsConnections
-from django.conf import settings
+
+from udltimes.models import Framed, StatsConnections, StatsFramed, StatsWordle
 
 
 def wordle_view(request):
@@ -21,6 +24,25 @@ def connections_view(request):
 
 def framed_view(request):
     return render(request, 'framed.html')
+
+
+def framed_api(request):
+    game = Framed.objects.prefetch_related('framedgamedata_set').order_by('-date').first()
+    if not game:
+        return JsonResponse(
+            {'status': 'error', 'message': 'No framed games found.'},
+            status=404,
+        )
+
+    frames = list(
+        game.framedgamedata_set.order_by('order').values('order', 'image')
+    )
+
+    return JsonResponse({
+        'date': game.date.isoformat(),
+        'answer': game.paraula,
+        'frames': frames,
+    })
 
 
 def home(request):
