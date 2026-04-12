@@ -4,55 +4,57 @@
 
 {% block content %}
 <div class="max-w-3xl mx-auto px-4 py-8 md:py-12">
+    
     <div class="text-center mb-8">
         <h2 class="font-display text-4xl mb-2 flex items-center justify-center gap-3">
             <span class="material-symbols-outlined text-primary text-4xl">videocam</span>
             FRAMED
         </h2>
-        <p class="text-slate-500 font-medium">Guess the movie from the frames</p>
+        <p class="text-slate-500 font-medium">Guess the location from the frames</p>
     </div>
+
+    <!-- IMAGE -->
     <div
+        id = "img-container"
         class="relative bg-black aspect-video rounded-xl overflow-hidden border-4 border-slate-900 dark:border-slate-700 shadow-xl mb-8 group">
-        <img alt="Current Movie Frame"
+        <img id="framed-img"
+            alt="Current Frame"
             class="w-full h-full object-cover opacity-90 group-hover:opacity-100 transition-opacity"
-            src="https://lh3.googleusercontent.com/aida-public/AB6AXuCmtPSJdscV2H8sxlE4Qyp74ZjRrcnolUTvS2KRyxnBAwrIVh3vCLRy_TFA7_4jTtX5nXxFXZh3RsHq7jTxXPPeAiQ0u0x4dHVb0qAyIw0mXk1PlOFPSlHkKO_UJa0C1rxFG1a6ldcAo_L9gOr_YREdwcFgywzBOP8XZa4WJpYGa7YkRYwligQ5zhwrRokALH2-qbfwIZQBFvVQROb1aSam1azVEXjbjKPIi9e2oJJ8M-4ndGT0TFOua-86idBR687agsQSDaxLzrc" />
-        <div
+            src="" />
+
+        <!-- frame counter -->
+        <div id="img-counter"
             class="absolute bottom-4 right-4 bg-primary text-white px-3 py-1 rounded-md font-display text-xs tracking-widest">
-            FRAME 1 / 6
         </div>
     </div>
-    <div class="flex justify-center gap-2 mb-8">
-        <div class="w-full h-2 bg-primary rounded-full"></div>
-        <div class="w-full h-2 bg-slate-200 dark:bg-slate-700 rounded-full"></div>
-        <div class="w-full h-2 bg-slate-200 dark:bg-slate-700 rounded-full"></div>
-        <div class="w-full h-2 bg-slate-200 dark:bg-slate-700 rounded-full"></div>
-        <div class="w-full h-2 bg-slate-200 dark:bg-slate-700 rounded-full"></div>
-        <div class="w-full h-2 bg-slate-200 dark:bg-slate-700 rounded-full"></div>
-    </div>
-    <div class="space-y-2 mb-8">
-        <div
-            class="h-12 border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-lg flex items-center px-4 text-slate-400 text-sm italic">
-            First guess...
-        </div>
-    </div>
+
+    <!-- progress bar (4 images) -->
+    <div id="progress-bar" class="flex w-full gap-2 mb-8"></div>
+
+    <!-- UNPUT AND BUTTONS -->
     <div class="space-y-4">
         <div class="relative">
             <input
                 id = "response-input"
                 list = 'response-options'
                 class="w-full h-14 px-6 border-2 border-slate-900 dark:border-slate-100 rounded-xl bg-white dark:bg-slate-800 focus:ring-4 focus:ring-primary/20 focus:border-primary outline-none transition-all font-medium text-lg"
-                placeholder="Enter movie title..." type="text" />
+                placeholder="Enter concept title..." 
+                type="text" 
+                autocomplete="off"
+                />
+                
             <datalist id="response-options"></datalist>
             <div class="absolute right-4 top-1/2 -translate-y-1/2 flex items-center gap-2">
                 <span class="material-symbols-outlined text-slate-400">search</span>
             </div>
         </div>
         <div class="flex gap-3">
-            <button
+            <button id="submit-btn"
+                onclick="submitAnswer()"
                 class="flex-1 py-4 bg-primary text-white font-display text-xl rounded-xl hover:bg-opacity-90 transition-all active:scale-[0.98] shadow-lg">
                 SUBMIT
             </button>
-            <button
+            <button onclick="skipImage()"
                 class="px-8 py-4 border-2 border-slate-900 dark:border-slate-100 font-display text-xl rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
                 SKIP
             </button>
@@ -62,7 +64,7 @@
         <h3 class="font-display text-sm text-primary mb-3">HOW TO PLAY</h3>
         <ul class="text-sm space-y-2 text-slate-600 dark:text-slate-400">
             <li class="flex gap-2">
-                <span class="font-bold text-primary">1.</span> Guess the movie from 6 frames.
+                <span class="font-bold text-primary">1.</span> Guess the location from 6 frames.
             </li>
             <li class="flex gap-2">
                 <span class="font-bold text-primary">2.</span> Each wrong guess or skip reveals a new frame.
@@ -78,28 +80,120 @@
 {% block extra_scripts %} 
 
 <script>
-const input = document.getElementById('response-input');
-const datalist = document.getElementById('response-options');
+let images = [];
+let currentIndex = 0;
+let conceptName = '';
+let visited = []
 
-input.addEventListener('input', async (e) => {
-    const term = e.target.value;
-    if (term.length < 2) return; 
+function initVisited() {
+    visited = new Array(images.length).fill(false);
+    visited[0] = true; 
+}
 
+async function loadGame() {
     try {
-        const response = await fetch(`/framed/movie-autocomplete/?term=${term}`);
-        const data = await response.json();
-
-        datalist.innerHTML = ''; 
-        data.forEach(item => {
-            const option = document.createElement('option');
-            option.value = item;
-            datalist.appendChild(option);
-        });
-    } catch (error) {
-        console.error("Error fetching autocomplete:", error);
+        const res = await fetch('/api/framed/');
+        if (!res.ok) {
+            document.getElementById('img-container').innerHTML = 
+                '<p class="text-slate-400">No game for today :p</p>';
+            return;
+        }
+        const data = await res.json();
+        images = data.images;
+        conceptName = data.concept;
+        initVisited();
+        showImage(0);
+    } catch (e) {
+        console.error('Error loading the game:', e);
     }
-});
+}
+
+function canAccess(index) {
+    if (index === 0) return true;
+    if (visited[index]) return true;
+    return index === getNextUnvisited();
+}
+
+function showImage(index) {
+    if (!canAccess(index)) return;
+
+    const img = document.getElementById('framed-img');
+    const counter = document.getElementById('img-counter');
+    currentIndex = index;
+
+    if (img && images[index]) {
+        img.src = images[index];
+    }
+    if (counter) {
+        counter.textContent = `FRAME ${index + 1} / ${images.length}`;
+    }
+
+    visited[index] = true;
+
+    updateProgressBar();
+}
+
+function getNextUnvisited(){
+    for (let i = currentIndex + 1; i < images.length; i++){
+        if(!visited[i]) return i;
+    }
+    return -1; 
+}
+
+function skipImage() {
+    const next = getNextUnvisited();
+    if (next !== -1) {
+        showImage(next);
+    }
+}
+
+function updateProgressBar() {
+    const container = document.getElementById('progress-bar');
+    container.innerHTML = '';
+
+    for (let i = 0; i < images.length; i++) {
+        const segment = document.createElement('div');
+        
+        segment.className = `
+            flex-1 h-6
+            flex items-center justify-center
+            rounded-full
+            text-[10px] font-bold font-display
+            transition-all duration-300
+        `;
+
+        segment.innerText = i + 1;
+        
+        if (i === currentIndex) {
+            segment.classList.add('bg-primary', 'text-white', 'scale-105');
+        }else if(visited[i]){
+            segment.classList.add('bg-primary/50', 'text-white', 'cursor-pointer', 'hover:bg-primary');
+            segment.onclick = () => showImage(i);
+        } else {
+            segment.classList.add('bg-slate-200', 'dark:bg-slate-700', 'text-slate-400');
+        }
+
+        container.appendChild(segment);
+    }
+}
+
+document.addEventListener('DOMContentLoaded', loadGame);
 </script>
 
 
+{% endblock %}
+
+{% block extra_css %} <style>
+    @keyframes pulse-soft {
+        0%, 100% { transform: scale(1); }
+        50% { transform: scale(1.05); }
+    }
+    .frame-active {
+        animation: pulse-soft 2s infinite ease-in-out;
+        box-shadow: 0 0 15px rgba(139, 92, 246, 0.4); /* Color morado de ejemplo */
+    }
+    .frame-transition {
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+</style>
 {% endblock %}
