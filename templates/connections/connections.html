@@ -123,6 +123,73 @@
     </div>
     
   </main>
+  
+  <script>
+    // simulamos lo que nos devolvera django
+    let palabrasDelDia = [
+      "RECTORAT", "CAPPONT", "ETSEA", "SALUT",
+      "DRET", "MEDICINA", "INFORMATICA", "FILOLOGIA",
+      "EXAM", "QUIZ", "TEST", "FINALS",
+      "CAFE", "SEU", "PARTY", "PLACA"
+    ];
 
+    // desordenamos la lista (shuffle inicial)
+    palabrasDelDia.sort(() => Math.random() - 0.5);
+
+    // guardamos las palabras que el usuario ha clickado
+    let palabrasSeleccionadas = [];
+
+    // dibujar la cuadricula
+    function dibujarCuadricula() {
+      const contenedorGrid = document.getElementById("grid");
+      contenedorGrid.innerHTML = ""; // limpiamos antes de pintar
+
+      // recorremos las 16 palabras una a una
+      palabrasDelDia.forEach(palabra => {
+        // el usuario ha hecho click en esta palabra?
+        const estaSeleccionada = palabrasSeleccionadas.includes(palabra);
+
+        // empezamos a montar las clases css
+        let clasesBase = "connection-card h-24 flex items-center justify-center rounded-lg border-2 font-bold text-sm text-center p-2 uppercase ";
+
+        // si esta seleccionada, le ponemos la clase 'selected' de <style>
+        // si no, le ponemos los colores grises
+        if (estaSeleccionada) {
+          clasesBase += "selected cursor-pointer";
+        } else {
+          clasesBase += "bg-slate-200 border-transparent hover:bg-slate-300 text-slate-900 cursor-pointer";
+        }
+
+        // creamos el boton en HTML y le decimos que al clickar llame a la funcion
+        const botonHTML = `<button onclick="togglePalabra('${palabra}')" class="${clasesBase}">${palabra}</button>`;
+
+        // lo metemos en el contenedor
+        contenedorGrid.innerHTML += botonHTML;
+      });
+    }
+
+    // interactividad
+    function togglePalabra(palabra) {
+      if (palabrasSeleccionadas.includes(palabra)) {
+        // si ya estaba seleccionada, la quitamos
+        palabrasSeleccionadas = palabrasSeleccionadas.filter(p => p !== palabra);
+      } else {
+        // si no estaba, y tenemos menos de 4, la añadimos
+        if (palabrasSeleccionadas.length < 4) {
+          palabrasSeleccionadas.push(palabra);
+        }
+      }
+
+      // despues de cambiar el estado, repintamos la cuadricula
+      dibujarCuadricula();
+    }
+
+    function deselectAll() {
+      palabrasSeleccionadas = [];
+      dibujarCuadricula();
+    }
+
+    dibujarCuadricula();
+  </script>
 </body>
 </html>
