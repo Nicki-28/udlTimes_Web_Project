@@ -108,6 +108,44 @@ async function loadGame() {
     }
 }
 
+//autocomplete (pendent fix)
+const responseInput = document.getElementById('response-input');
+const responseOptions = document.getElementById('response-options');
+
+let autocompleteTimeout = null;
+
+responseInput.addEventListener('input', function () {
+    if (suppressAutocomplete) return;
+    clearTimeout(autocompleteTimeout);
+
+    const query = this.value.trim();
+
+    if (query.length < 2) {
+        responseOptions.innerHTML = '';
+        return;
+    }
+
+    autocompleteTimeout = setTimeout(async () => {
+        try {
+            const res = await fetch(`/framed/movie-autocomplete/?term=${encodeURIComponent(query)}`);
+            if (!res.ok) return;
+
+            const concepts = await res.json();
+
+            responseOptions.innerHTML = '';
+
+            concepts.forEach(concept => {
+                const option = document.createElement('option');
+                option.value = concept;
+                responseOptions.appendChild(option);
+            });
+
+        } catch (e) {
+            console.error('Autocomplete error:', e);
+        }
+    },);
+});
+
 function canAccess(index) {
     if (index === 0) return true;
     if (visited[index]) return true;
