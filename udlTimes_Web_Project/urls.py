@@ -17,13 +17,14 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 
-from udltimes.views import SignUpView, home, wordle_view, connections_view, framed_view, register_view, login_view, profile_view, framed_autocomplete
+from udltimes.views import SignUpView, home, wordle_view, connections_view, framed_view, register_view, login_view, profile_view, framed_autocomplete, framed_api
 from django.contrib.auth.views import LogoutView
 
 urlpatterns = [
     path('wordle/', wordle_view, name='wordle'),
     path('connections/', connections_view, name='connections'),
     path('framed/', framed_view, name='framed'),
+    path('api/framed/', framed_api, name='framed-api'),
     path('', home, name='home'),
     path('admin/', admin.site.urls),
     path('accounts/signup/', SignUpView.as_view(), name='signup'),

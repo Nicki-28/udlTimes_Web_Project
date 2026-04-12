@@ -7,8 +7,9 @@ from django.shortcuts import render, redirect
 from django.urls import reverse_lazy
 from django.views.generic import CreateView
 from django.db.models import Count, Q
-from udltimes.models import StatsWordle, StatsFramed, StatsConnections
+from udltimes.models import Framed, StatsWordle, StatsFramed, StatsConnections
 from django.conf import settings
+
 
 #provisional imports
 import json
@@ -27,6 +28,23 @@ def connections_view(request):
 def framed_view(request):
     return render(request, 'framed.html')
 
+def framed_api(request):
+    game = Framed.objects.prefetch_related('framedgamedata_set').order_by('-date').first()
+    if not game:
+        return JsonResponse(
+            {'status': 'error', 'message': 'No framed games found.'},
+            status=404,
+        )
+
+    frames = list(
+        game.framedgamedata_set.order_by('order').values('order', 'image')
+    )
+
+    return JsonResponse({
+        'date': game.date.isoformat(),
+        'answer': game.paraula,
+        'frames': frames,
+    })
 
 def home(request):
     ee_user = getattr(settings, 'EE_USER', '')
