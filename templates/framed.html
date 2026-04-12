@@ -113,6 +113,7 @@ const responseInput = document.getElementById('response-input');
 const responseOptions = document.getElementById('response-options');
 
 let autocompleteTimeout = null;
+let suppressAutocomplete = false;
 
 responseInput.addEventListener('input', function () {
     if (suppressAutocomplete) return;
