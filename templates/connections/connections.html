@@ -189,10 +189,32 @@
       dibujarJuego();
     }
 
+    function comprobarJugada() {
+      if (palabrasSeleccionadas.length !== 4) return; // tiene que haber 4 marcadas
 
+      // buscamos si la seleccion coincide exactamente con alguna solucion
+      const categoriaEncontrada = soluciones.find(solucion => {
+        return solucion.palabras.every(p => palabrasSeleccionadas.includes(p));
+      });
 
+      if (categoriaEncontrada) {
+        categoriasAcertadas.push(categoriaEncontrada); // la pasamos arriba
+        palabrasActivas = palabrasActivas.filter(p => !palabrasSeleccionadas.includes(p)); // la borramos de abajo
+        palabrasSeleccionadas = []; // vaciamos la seleccion
 
+        // comprobar si hemos ganado
+        if (categoriasAcertadas.length == 4) {
+          setTimeout(() => alert("CONGRATULATIONS! You won."), 300);
+        }
+      } else {
+        vidas--;
+        if (vidas <= 0) {
+          setTimeout(() => alert("GAME OVER! You've run out of lives."), 300);
+        }
+      }
 
+      dibujarJuego();
+    }
 
     dibujarJuego();
   </script>
