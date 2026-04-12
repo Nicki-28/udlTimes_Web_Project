@@ -92,20 +92,8 @@
       </div>
     </div>
     
-    <div class="grid grid-cols-4 gap-2 mb-10">
-      <button class="connection-card selected h-24 flex items-center justify-center rounded-lg border-2 font-bold text-sm text-center p-2 uppercase">
-        EXAM
-      </button>
-      <button class="connection-card bg-slate-200 border-transparent hover:bg-slate-300 h-24 flex items-center justify-center rounded-lg border-2 font-bold text-sm text-center p-2 uppercase">
-        CAFE
-      </button>
-      <button class="connection-card selected h-24 flex items-center justify-center rounded-lg border-2 font-bold text-sm text-center p-2 uppercase">
-        QUIZ
-      </button>
-      <button class="connection-card bg-slate-200 border-transparent hover:bg-slate-300 h-24 flex items-center justify-center rounded-lg border-2 font-bold text-sm text-center p-2 uppercase">
-        SEU
-      </button>
-    </div>
+    <div id="grid" class="grid grid-cols-4 gap-2 mb-10">
+      </div>
     
     <div class="flex flex-col items-center gap-8">
       
@@ -121,7 +109,7 @@
       
       <div class="flex flex-wrap justify-center gap-4">
         <button class="px-8 py-3 rounded-full border-2 border-slate-900 font-bold hover:bg-slate-100 transition-colors">SHUFFLE</button>
-        <button class="px-8 py-3 rounded-full border-2 border-slate-900 font-bold hover:bg-slate-100 transition-colors">DESELECT ALL</button>
+        <button onclick="deselectAll()" class="px-8 py-3 rounded-full border-2 border-slate-900 font-bold hover:bg-slate-100 transition-colors">DESELECT ALL</button>
         <button class="px-10 py-3 rounded-full bg-primary text-white font-bold hover:bg-primary-dark transition-colors shadow-lg shadow-primary/20">SUBMIT</button>
       </div>
       
