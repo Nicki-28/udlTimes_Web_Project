@@ -1,53 +1,56 @@
 <!DOCTYPE html>
-<html lang="en"><head>
-<meta charset="utf-8"/>
-<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-<title>UdL-Times | Connections</title>
-<link href="https://fonts.googleapis.com" rel="preconnect"/>
-<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
-<link href="https://fonts.googleapis.com/css2?family=Bungee&amp;family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
-<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
-<script src="https://cdn.tailwindcss.com?plugins=forms,typography,container-queries"></script>
-<script>
-        tailwind.config = {
-            darkMode: "class",
-            theme: {
-                extend: {
-                    colors: {
-                        primary: "#700040", // University Purple
-                        "primary-light": "#8a1a5a",
-                        "primary-dark": "#5a0033",
-                        "background-light": "#f8fafc",
-                        "background-dark": "#0f172a",
-                        secondary: "#f59e0b",
-                    },
-                    fontFamily: {
-                        display: ["Bungee", "cursive"],
-                        sans: ["Inter", "sans-serif"],
-                    },
-                    borderRadius: {
-                        DEFAULT: "0.75rem",
-                    },
-                },
-            },
-        };
-    </script>
-<style type="text/tailwindcss">
-        .grid-pattern {
-            background-image: radial-gradient(circle, #00000010 1px, transparent 1px);
-            background-size: 20px 20px;
-        }
-        .dark .grid-pattern {
-            background-image: radial-gradient(circle, #ffffff10 1px, transparent 1px);
-        }
-        .connection-card {
-            transition: all 0.2s ease;
-        }
-        .connection-card.selected {
-            @apply bg-primary text-white border-primary shadow-[4px_4px_0px_0px_rgba(0,0,0,0.1)];
-        }
-    </style>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+  <title>UdL-Times | Connections</title>
+  
+  <link href="https://fonts.googleapis.com" rel="preconnect"/>
+  <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+  <link href="https://fonts.googleapis.com/css2?family=Bungee&amp;family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+  <script src="https://cdn.tailwindcss.com?plugins=forms,typography,container-queries"></script>
+  
+  <script>
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            primary: "#700040",
+            "primary-light": "#8a1a5a",
+            "primary-dark": "#5a0033",
+            "background-light": "#f8fafc",
+            "background-dark": "#0f172a",
+            secondary: "#f59e0b",
+          },
+          fontFamily: {
+            display: ["Bungee", "cursive"],
+            sans: ["Inter", "sans-serif"],
+          },
+          borderRadius: {
+            DEFAULT: "0.75rem",
+          },
+        },
+      },
+    };
+  </script>
+  
+  <style type="text/tailwindcss">
+    .grid-pattern {
+      background-image: radial-gradient(circle, #00000010 1px, transparent 1px);
+      background-size: 20px 20px;
+    }
+    .connection-card {
+      transition: all 0.2s ease;
+    }
+    .connection-card.selected {
+      @apply bg-primary text-white border-primary shadow-[4px_4px_0px_0px_rgba(0,0,0,0.1)];
+    }
+  </style>
 </head>
+
+
 <body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 min-h-screen font-sans grid-pattern">
 <header class="sticky top-0 z-50 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800">
 <div class="max-w-7xl mx-auto px-4 h-20 flex items-center justify-between">
