@@ -11,7 +11,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
   <script src="https://cdn.tailwindcss.com?plugins=forms,typography,container-queries"></script>
 
-  <script>
+    <script>
     tailwind.config = {
       darkMode: "class",
       theme: {
@@ -37,13 +37,11 @@
   </script>
 
   <style>
-    /* ─── grid background pattern ─── */
     .grid-pattern {
       background-image: radial-gradient(circle, #00000010 1px, transparent 1px);
       background-size: 20px 20px;
     }
 
-    /* ─── card base ─── */
     .connection-card {
       height: 80px;
       border-radius: 10px;
@@ -68,7 +66,6 @@
     .connection-card:hover:not(.selected) { background: #cbd5e1; }
     .connection-card:active { transform: scale(0.96); }
 
-    /* ─── selected state ─── */
     .connection-card.selected {
       background: #1e293b;
       color: #fff;
@@ -76,12 +73,10 @@
       animation: popSelect 0.18s cubic-bezier(0.34, 1.56, 0.64, 1) both;
     }
 
-    /* ─── solved row animation ─── */
     .solved-row {
       animation: flipIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both;
     }
 
-    /* ─── dot life indicator ─── */
     .life-dot {
       width: 12px;
       height: 12px;
@@ -94,7 +89,6 @@
       transform: scale(0.8);
     }
 
-    /* ─── toast notification ─── */
     #toast {
       position: fixed;
       top: 88px;
@@ -118,7 +112,6 @@
       transform: translateX(-50%) translateY(0);
     }
 
-    /* ─── "one away" badge ─── */
     #one-away-slot {
       min-height: 36px;
       display: flex;
@@ -139,7 +132,6 @@
       animation: fadeInDown 0.3s ease both;
     }
 
-    /* ─── Animations ─── */
     @keyframes popSelect {
       0%   { transform: scale(1); }
       50%  { transform: scale(1.07); }
@@ -154,12 +146,14 @@
       75%     { transform: translateX(-3px); }
       90%     { transform: translateX(3px); }
     }
-    @keyframes correctBounce {
+
+    @keyframes pop {
       0%   { transform: scale(1); }
       40%  { transform: scale(1.1); }
       70%  { transform: scale(0.95); }
       100% { transform: scale(1); }
     }
+
     @keyframes flipIn {
       0%   { transform: rotateX(-90deg); opacity: 0; }
       100% { transform: rotateX(0deg);  opacity: 1; }
@@ -169,7 +163,7 @@
       100% { opacity: 1; transform: translateY(0); }
     }
 
-    .shake { animation: shake 0.45s ease both !important; }
+    .shake          { animation: shake 0.45s ease both !important; }
     @keyframes flipOut {
       0%   { transform: rotateY(0deg) scale(1); }
       100% { transform: rotateY(-90deg) scale(1.05); }
@@ -213,27 +207,26 @@
   <main class="max-w-2xl mx-auto px-4 py-10">
 
     <div class="text-center mb-6">
-      <h2 class="text-lg font-medium mb-2">Create four groups of four!</h2>
+      <h2 class="text-base font-medium text-slate-500">Create four groups of four!</h2>
     </div>
 
     <div id="categorias-resueltas" class="space-y-2 mb-2"></div>
     <div id="grid" class="grid grid-cols-4 gap-2 mb-3"></div>
     <div id="one-away-slot"></div>
 
-    <div class="flex flex-col items-center gap-8">
+    <div class="flex flex-col items-center gap-6 mt-4">
       <div class="flex items-center gap-3">
-        <span class="text-sm font-bold text-slate-500 uppercase">Mistakes remaining:</span>
+        <span class="text-xs font-bold text-slate-400 uppercase tracking-widest">Mistakes remaining:</span>
         <div id="vidas-container" class="flex gap-2"></div>
       </div>
-
-      <div class="flex flex-wrap justify-center gap-4">
-        <button onclick="mezclarPalabras()" class="px-8 py-3 rounded-full border-2 border-slate-900 font-bold hover:bg-slate-100 transition-colors">SHUFFLE</button>
-        <button onclick="deselectAll()" class="px-8 py-3 rounded-full border-2 border-slate-900 font-bold hover:bg-slate-100 transition-colors">DESELECT ALL</button>
-        <button onclick="comprobarJugada()" class="px-10 py-3 rounded-full bg-primary text-white font-bold hover:bg-primary-dark transition-colors shadow-lg shadow-primary/20">SUBMIT</button>
+      <div class="flex flex-wrap justify-center gap-3">
+        <button onclick="mezclarPalabras()" class="px-8 py-3 rounded-full border-2 border-slate-900 font-bold text-sm hover:bg-slate-100 transition-colors">SHUFFLE</button>
+        <button onclick="deselectAll()" class="px-8 py-3 rounded-full border-2 border-slate-900 font-bold text-sm hover:bg-slate-100 transition-colors">DESELECT ALL</button>
+        <button onclick="comprobarJugada()" class="px-10 py-3 rounded-full bg-primary text-white font-bold text-sm hover:bg-primary-dark transition-colors shadow-lg shadow-primary/20">SUBMIT</button>
       </div>
     </div>
 
-    <div class="mt-16 text-center">
+    <div class="mt-14 text-center">
       <a class="inline-flex items-center gap-2 text-slate-500 hover:text-primary transition-colors font-bold text-sm" href="/">
         <span class="material-symbols-outlined text-base">arrow_back</span>
         BACK TO GAMES HUB
