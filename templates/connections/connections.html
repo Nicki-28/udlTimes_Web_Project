@@ -106,47 +106,61 @@
   </main>
   
   <script>
-    // simulamos lo que nos devolvera django
-    let palabrasDelDia = [
-      "RECTORAT", "CAPPONT", "ETSEA", "SALUT",
-      "DRET", "MEDICINA", "INFORMATICA", "FILOLOGIA",
-      "EXAM", "QUIZ", "TEST", "FINALS",
-      "CAFE", "SEU", "PARTY", "PLACA"
+    // soluciones secretas (mas adelante django lo pillara de la BBDD)
+    const soluciones = [
+      { titulo: "CAMPUS BUILDINGS", palabras: ["RECTORAT", "CAPPONT", "ETSEA", "SALUT"], color: "bg-primary" },
+      { titulo: "UdL DEGREES", palabras: ["DRET", "MEDICINA", "INFORMATICA", "FILOLOGIA"], color: "bg-primary-light" },
+      { titulo: "EXAM SYNONYMS", palabras: ["EXAM", "QUIZ", "TEST", "FINALS"], color: "bg-primary-dark" },
+      { titulo: "HANG OUT SPOTS", palabras: ["CAFE", "SEU", "PARTY", "PLACA"], color: "bg-slate-800" }
     ];
 
-    // desordenamos la lista (shuffle inicial)
-    palabrasDelDia.sort(() => Math.random() - 0.5);
-
-    // guardamos las palabras que el usuario ha clickado
+    // estado del juego
+    let categoriasAcertadas = [];
     let palabrasSeleccionadas = [];
+    let vidas = 4;
 
-    // dibujar la cuadricula
-    function dibujarCuadricula() {
-      const contenedorGrid = document.getElementById("grid");
-      contenedorGrid.innerHTML = ""; // limpiamos antes de pintar
+    // .flatMap() coge todas las palabras de los 4 grupos y los mete en una sola lista de 16
+    let palabrasActivas = soluciones.flatMap(s => s.palabras).sort(() => Math.random() - 0.5);
 
-      // recorremos las 16 palabras una a una
-      palabrasDelDia.forEach(palabra => {
-        // el usuario ha hecho click en esta palabra?
+    function dibujarJuego() {
+      // pintar las categorias acertadas (arriba)
+      const divResueltas = document.getElementById("categorias-resueltas");
+      divResueltas.innerHTML = "";
+      categoriasAcertadas.forEach(cat => {
+        divResueltas.innerHTML += `
+        <div class="${cat.color} text-white p-4 rounded-lg text-center flex flex-col items-center justify-center shadow-md animate-fade-in">
+            <h3 class="font-display text-sm tracking-widest mb-1">${cat.titulo}</h3>
+            <p class="text-xs uppercase font-bold opacity-90">${cat.palabras.join(", ")}</p>
+          </div>
+        `;
+      });
+
+      // pintar la cuadricula (abajo)
+      const divGrid = document.getElementById("grid");
+      divGrid.innerHTML = "";
+      palabrasActivas.forEach(palabra => {
         const estaSeleccionada = palabrasSeleccionadas.includes(palabra);
+        let clasesBase = "connection-card h-24 flex items-center justify-center rounded-lg border-2 font-bold text-sm text-center p-2 uppercase cursor-pointer ";
 
-        // empezamos a montar las clases css
-        let clasesBase = "connection-card h-24 flex items-center justify-center rounded-lg border-2 font-bold text-sm text-center p-2 uppercase ";
-
-        // si esta seleccionada, le ponemos la clase 'selected' de <style>
-        // si no, le ponemos los colores grises
         if (estaSeleccionada) {
-          clasesBase += "selected cursor-pointer";
+          clasesBase += "selected";
         } else {
-          clasesBase += "bg-slate-200 border-transparent hover:bg-slate-300 text-slate-900 cursor-pointer";
+          clasesBase += "bg-slate-200 border-transparent hover:bg-slate-300 text-slate-900";
         }
 
-        // creamos el boton en HTML y le decimos que al clickar llame a la funcion
-        const botonHTML = `<button onclick="togglePalabra('${palabra}')" class="${clasesBase}">${palabra}</button>`;
-
-        // lo metemos en el contenedor
-        contenedorGrid.innerHTML += botonHTML;
+        divGrid.innerHTML += `<button onclick="togglePalabra('${palabra}')" class="${clasesBase}">${palabra}</button>`;
       });
+
+      // pintar las vidas (bolitas)
+      const divVidas = document.getElementById("vidas-container");
+      divVidas.innerHTML = "";
+      for (let i = 0; i < 4; i++) {
+        if (i < vidas) {
+          divVidas.innerHTML += `<div class="w-3 h-3 rounded-full bg-primary transition-all"></div>`;
+        } else {
+          divVidas.innerHTML += `<div class="w-3 h-3 rounded-full bg-slate-300 transition-all"></div>`;
+        }
+      }
     }
 
     // interactividad
@@ -162,15 +176,25 @@
       }
 
       // despues de cambiar el estado, repintamos la cuadricula
-      dibujarCuadricula();
+      dibujarJuego();
     }
 
     function deselectAll() {
       palabrasSeleccionadas = [];
-      dibujarCuadricula();
+      dibujarJuego();
     }
 
-    dibujarCuadricula();
+    function mezclarPalabras() {
+      palabrasActivas.sort(() => Math.random() - 0.5);
+      dibujarJuego();
+    }
+
+
+
+
+
+
+    dibujarJuego();
   </script>
 </body>
 </html>
