@@ -237,87 +237,121 @@
   <script>
     // soluciones secretas (mas adelante django lo pillara de la BBDD)
     const soluciones = [
-      { titulo: "CAMPUS BUILDINGS", palabras: ["RECTORAT", "CAPPONT", "ETSEA", "SALUT"], color: "bg-primary" },
-      { titulo: "UdL DEGREES", palabras: ["DRET", "MEDICINA", "INFORMATICA", "FILOLOGIA"], color: "bg-primary-light" },
-      { titulo: "EXAM SYNONYMS", palabras: ["EXAM", "QUIZ", "TEST", "FINALS"], color: "bg-primary-dark" },
-      { titulo: "HANG OUT SPOTS", palabras: ["CAFE", "SEU", "PARTY", "PLACA"], color: "bg-slate-800" }
+      { titulo: "CAMPUS BUILDINGS", palabras: ["RECTORAT","CAPPONT","ETSEA","SALUT"], color: "#e9c46a" },
+      { titulo: "UdL DEGREES", palabras: ["DRET","MEDICINA","INFORMATICA","FILOLOGIA"], color: "#f4a261" },
+      { titulo: "EXAM SYNONYMS", palabras: ["EXAM","QUIZ","TEST","FINALS"], color: "#e76f51" },
+      { titulo: "HANG OUT SPOTS", palabras: ["CAFE","SEU","PARTY","PLACA"], color: "#c1440e" }
     ];
 
     // estado del juego
     let categoriasAcertadas = [];
     let palabrasSeleccionadas = [];
     let vidas = 4;
+    let enviando = false;
 
     // .flatMap() coge todas las palabras de los 4 grupos y los mete en una sola lista de 16
     let palabrasActivas = soluciones.flatMap(s => s.palabras).sort(() => Math.random() - 0.5);
 
-    function dibujarJuego() {
-      // pintar las categorias acertadas (arriba)
-      const divResueltas = document.getElementById("categorias-resueltas");
-      divResueltas.innerHTML = "";
-      categoriasAcertadas.forEach(cat => {
-        divResueltas.innerHTML += `
-        <div class="${cat.color} text-white p-4 rounded-lg text-center flex flex-col items-center justify-center shadow-md animate-fade-in">
-            <h3 class="font-display text-sm tracking-widest mb-1">${cat.titulo}</h3>
-            <p class="text-xs uppercase font-bold opacity-90">${cat.palabras.join(", ")}</p>
-          </div>
-        `;
-      });
 
+    // RENDER COMPLETO: se llama al iniciar, al hacer shuffle y tras un submit correcto
+
+    // añade una categoria resuelta a las ya resueltas con animacion
+    const COLORES_CLAROS = ["#e9c46a", "#f4a261", "#e76f51", "#c1440e"];
+
+    function textoParaFondo(color) {
+      return "#5a0033";
+    }
+
+    function anadirCategoriaResuelta(cat) {
+      const divResueltas = document.getElementById("categorias-resueltas");
+      const div = document.createElement("div");
+      const textColor = textoParaFondo(cat.color);
+      div.className = "rounded-xl p-4 text-center flex flex-col items-center justify-center";
+      div.style.background = cat.color;
+      div.style.color = textColor;
+      div.innerHTML = `
+        <h3 class="font-display text-xs tracking-widest mb-1">${cat.titulo}</h3>
+        <p class="text-xs uppercase font-bold opacity-90">${cat.palabras.join(", ")}</p>`;
+      div.style.transform = "scaleY(0)";
+      div.style.transformOrigin = "top";
+      div.style.opacity = "0";
+      div.style.transition = "transform 0.35s cubic-bezier(0.34,1.56,0.64,1), opacity 0.25s ease";
+      divResueltas.appendChild(div);
+      void div.offsetWidth;
+      div.style.transform = "scaleY(1)";
+      div.style.opacity = "1";
+    }
+
+    function dibujarJuego() {
       // pintar la cuadricula (abajo)
       const divGrid = document.getElementById("grid");
       divGrid.innerHTML = "";
       palabrasActivas.forEach(palabra => {
-        const estaSeleccionada = palabrasSeleccionadas.includes(palabra);
-        let clasesBase = "connection-card h-24 flex items-center justify-center rounded-lg border-2 font-bold text-sm text-center p-2 uppercase cursor-pointer ";
-
-        if (estaSeleccionada) {
-          clasesBase += "selected";
-        } else {
-          clasesBase += "bg-slate-200 border-transparent hover:bg-slate-300 text-slate-900";
-        }
-
-        divGrid.innerHTML += `<button onclick="togglePalabra('${palabra}')" class="${clasesBase}">${palabra}</button>`;
+        const btn = document.createElement("button");
+        btn.className = "connection-card" + (palabrasSeleccionadas.includes(palabra) ? " selected" : "");
+        btn.textContent = palabra;
+        btn.dataset.palabra = palabra;
+        btn.addEventListener("click", onCardClick);
+        divGrid.appendChild(btn);
       });
 
-      // pintar las vidas (bolitas)
+      // Vidas
+      actualizarVidas();
+    }
+
+    // actualizar seleccion
+    function actualizarSeleccion() {
+      document.querySelectorAll(".connection-card").forEach(btn => {
+        btn.classList.toggle("selected", palabrasSeleccionadas.includes(btn.dataset.palabra));
+      });
+    }
+
+    function actualizarVidas() {
       const divVidas = document.getElementById("vidas-container");
       divVidas.innerHTML = "";
       for (let i = 0; i < 4; i++) {
-        if (i < vidas) {
-          divVidas.innerHTML += `<div class="w-3 h-3 rounded-full bg-primary transition-all"></div>`;
-        } else {
-          divVidas.innerHTML += `<div class="w-3 h-3 rounded-full bg-slate-300 transition-all"></div>`;
-        }
+        const dot = document.createElement("div");
+        dot.className = "life-dot" + (i >= vidas ? " lost" : "");
+        divVidas.appendChild(dot);
       }
     }
 
-    // interactividad
+    // INTERACTIVIDAD
+
+    // currentTarget siempre es el botón, aunque el click venga del texto hijo
+    function onCardClick(e) {
+      togglePalabra(e.currentTarget.dataset.palabra);
+    }
+
     function togglePalabra(palabra) {
+      if (enviando) return;
       if (palabrasSeleccionadas.includes(palabra)) {
         // si ya estaba seleccionada, la quitamos
         palabrasSeleccionadas = palabrasSeleccionadas.filter(p => p !== palabra);
       } else {
         // si no estaba, y tenemos menos de 4, la añadimos
-        if (palabrasSeleccionadas.length < 4) {
-          palabrasSeleccionadas.push(palabra);
-        }
+        if (palabrasSeleccionadas.length >= 4) return;
+        palabrasSeleccionadas.push(palabra);
       }
-
-      // despues de cambiar el estado, repintamos la cuadricula
-      dibujarJuego();
+        actualizarSeleccion();
     }
 
     function deselectAll() {
+      if (enviando) return;
       palabrasSeleccionadas = [];
-      dibujarJuego();
+      actualizarSeleccion();
     }
 
     function mezclarPalabras() {
+      if (enviando) return;
       palabrasActivas.sort(() => Math.random() - 0.5);
-      dibujarJuego();
+      // setTimeout 0 para que el rebuild ocurra en el siguiente tick,
+      // después de que el evento click del shuffle haya terminado del todo
+      setTimeout(dibujarJuego, 0);
     }
 
+
+    // SUBMIT con animaciones
     function comprobarJugada() {
       if (palabrasSeleccionadas.length !== 4) return; // tiene que haber 4 marcadas
 
