@@ -1,3 +1,4 @@
+import re
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from django.contrib.auth import login, update_session_auth_hash
@@ -7,13 +8,9 @@ from django.shortcuts import render, redirect
 from django.urls import reverse_lazy
 from django.views.generic import CreateView
 from django.db.models import Count, Q
-from udltimes.models import Framed, StatsWordle, StatsFramed, StatsConnections
+from udltimes.models import Framed, StatsWordle, StatsFramed, StatsConnections, FramedConcept, FramedConceptImage
 from django.conf import settings
-
-
-#provisional imports
-import json
-import os
+from django.utils import timezone
 from django.http import JsonResponse
 
 
@@ -28,23 +25,39 @@ def connections_view(request):
 def framed_view(request):
     return render(request, 'framed.html')
 
-def framed_api(request):
-    game = Framed.objects.prefetch_related('framedgamedata_set').order_by('-date').first()
-    if not game:
-        return JsonResponse(
-            {'status': 'error', 'message': 'No framed games found.'},
-            status=404,
-        )
+def framed_autocomplete(request): 
+    query = request.GET.get('term', '').lower()
+    results = []
 
-    frames = list(
-        game.framedgamedata_set.order_by('order').values('order', 'image')
+    if query:
+
+        results = list(
+            FramedConcept.objects
+            .filter(concept__icontains=query)
+            .values_list('concept', flat=True)[:10]
+        )
+        
+    return JsonResponse(results, safe=False)
+
+def framed_api(request):
+    
+    today = timezone.localdate()
+
+    try:
+        game = Framed.objects.select_related('concept').get(date=today)
+    except:
+        return JsonResponse({'ERROR': 'No game today :p'})
+    
+    images = list(
+        game.concept.images.all().values_list('image_url', flat=True)
     )
 
     return JsonResponse({
-        'date': game.date.isoformat(),
-        'answer': game.paraula,
-        'frames': frames,
+        'concept' : game.concept.concept,
+        'images' : images
     })
+
+
 
 def home(request):
     ee_user = getattr(settings, 'EE_USER', '')
@@ -250,16 +263,3 @@ class SignUpView(CreateView):
     template_name = 'registration/signup.html'
     success_url = reverse_lazy('login')
 
-def framed_autocomplete(request): #privisionalmente leemos el json con palabras -> autocompletado
-    query = request.GET.get('term', '').lower()
-    results = []
-
-    if query:
-
-        provisional_path = os.path.join(settings.BASE_DIR, 'udltimes/apps/framed/framed_answers.json')
-
-        with open(provisional_path, encoding='utf-8') as f:
-            all_answers = json.load(f)
-            results = [m for m in all_answers if query in m.lower()][:10]
-
-    return JsonResponse(results, safe=False)
