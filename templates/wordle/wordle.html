@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mi Pruebecita de Wordle</title>
+    <title>Wordle</title>
 
     <link href="https://fonts.googleapis.com/css2?family=Bungee&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
@@ -112,11 +112,23 @@
     </div>
 
     <script>
+        // VARIABLES GLOBALES
         let filaActual = 0;
         let colActual = 0;
         let intentoActual = "";
         let juegoTerminado = false;
+        let animando = false;
 
+        // CRONÓMETRO
+        let tiempoInicio = Date.now();
+
+        function formatearTiempo(segundosTotales) {
+            const minutos = Math.floor(segundosTotales / 60);
+            const segundos = segundosTotales % 60;
+            return `${minutos}:${segundos < 10 ? '0' : ''}${segundos}`;
+        }
+
+        // FUNCIONES MODALES
         function abrirAyuda() {
             document.getElementById('modal-ayuda').classList.remove('hidden');
         }
@@ -132,7 +144,7 @@
                 <div class="bg-white p-8 rounded-2xl shadow-2xl max-w-sm w-full mx-4 text-center font-inter">
                     <h2 class="text-3xl font-extrabold mb-4 text-[#700040] font-bungee">${titulo}</h2>
                     ${htmlContenido}
-                    <button onclick="this.closest('.fixed').remove()" class="mt-2 px-6 py-2 bg-[#700040] text-white rounded-xl font-bold hover:bg-[#500030] transition-colors">
+                    <button onclick="this.closest('.fixed').remove()" class="mt-4 px-8 py-3 bg-[#700040] text-white rounded-xl font-bold hover:bg-[#500030] transition-colors w-full">
                         Cerrar
                     </button>
                 </div>
@@ -147,6 +159,7 @@
             }
         });
 
+        // CSRF TOKEN
         function getCookie(name) {
             let cookieValue = null;
             if (document.cookie && document.cookie !== '') {
@@ -209,7 +222,7 @@
 
         // 3. LÓGICA CENTRAL DEL JUEGO
         function manejarEntrada(letra) {
-            if (juegoTerminado) return;
+            if (juegoTerminado || animando) return;
 
             if (letra === "DEL") {
                 if (colActual > 0) {
@@ -220,16 +233,49 @@
 
             } else if (letra === "ENTER") {
                 if (intentoActual.length === 5) {
+                    animando = true;
+
+                    const tiempoFinal = Date.now();
+                    const segundosTranscurridos = Math.floor((tiempoFinal - tiempoInicio) / 1000);
+
                     fetch('/wordle/check-guess/', {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
                             'X-CSRFToken': getCookie('csrftoken')
                         },
-                        body: JSON.stringify({ guess: intentoActual })
+                        body: JSON.stringify({
+                            guess: intentoActual,
+                            username: "nicole",
+                            attempt: filaActual + 1,
+                            time: segundosTranscurridos
+                        })
                     })
                     .then(response => response.json())
                     .then(data => {
+
+                        // manejo de la palabra no valida
+                        if (data.status === "invalid_word") {
+                            for (let i = 0; i < 5; i++) {
+                                const casilla = document.getElementById(`box-${filaActual}${i}`);
+                                casilla.classList.add('shake');
+
+                                setTimeout(() => {
+                                    casilla.classList.remove('shake');
+                                    casilla.innerText = "";
+                                }, 500);
+                            }
+
+                            setTimeout(() => {
+                                intentoActual = "";
+                                colActual = 0;
+                                animando = false;
+                            }, 500);
+
+                            return; // No avanzamos de fila
+                        }
+
+                        // palabra valida
                         const coloresTailwind = {
                             'correct': 'bg-key-correct text-white border-key-correct',
                             'present': 'bg-key-present text-white border-key-present',
@@ -253,6 +299,7 @@
                             if (data.win) {
                                 juegoTerminado = true;
 
+                                // Efecto ola
                                 for (let i = 0; i < 5; i++) {
                                     setTimeout(() => {
                                         const box = document.getElementById(`box-${filaActual}${i}`);
@@ -262,12 +309,22 @@
                                 }
 
                                 const intentosUsados = filaActual + 1;
-                                const puntuacionFinal = (7 - intentosUsados) * 100;
+                                const puntuacionFinal = 100 - ((intentosUsados - 1) * 10);
+                                const tiempoFormateado = formatearTiempo(segundosTranscurridos);
 
                                 setTimeout(() => {
                                     mostrarModalFinal("¡HAS GANADO!", `
-                                        <p class="text-gray-600 text-lg mb-6">Adivinada en <span class="font-bold text-[#700040]">${intentosUsados} ${intentosUsados === 1 ? 'intento' : 'intentos'}</span>.</p>
-                                        <div class="bg-[#F6F8FA] border-2 border-[#E3E8EC] p-4 rounded-xl mb-8">
+                                        <div class="flex justify-around mb-6 text-gray-600 text-sm mt-4">
+                                            <div class="flex flex-col items-center">
+                                                <span class="font-bold text-[#700040] text-xl">${intentosUsados}/6</span>
+                                                <span>Intentos</span>
+                                            </div>
+                                            <div class="flex flex-col items-center">
+                                                <span class="font-bold text-[#700040] text-xl">${tiempoFormateado}</span>
+                                                <span>Tiempo</span>
+                                            </div>
+                                        </div>
+                                        <div class="bg-[#F6F8FA] border-2 border-[#E3E8EC] p-4 rounded-xl mb-4">
                                             <p class="text-xs text-gray-400 uppercase tracking-widest font-bold mb-1">Puntuación Total</p>
                                             <p class="text-6xl font-extrabold text-[#C9B458] font-bungee">${puntuacionFinal}</p>
                                         </div>
@@ -286,18 +343,35 @@
 
                             } else if (filaActual === 5) {
                                 juegoTerminado = true;
+                                const tiempoFormateado = formatearTiempo(segundosTranscurridos);
                                 mostrarModalFinal("¡OH NO!", `
                                     <p class="text-gray-600 mb-6">Te has quedado sin intentos.</p>
-                                    <p class="text-sm text-gray-400">La palabra era secreta... ¡vuelve a intentarlo mañana!</p>
+                                    <div class="flex justify-around mb-6 text-gray-600 text-sm">
+                                        <div class="flex flex-col items-center">
+                                            <span class="font-bold text-gray-400 text-xl">0</span>
+                                            <span>Puntos</span>
+                                        </div>
+                                        <div class="flex flex-col items-center">
+                                            <span class="font-bold text-gray-400 text-xl">${tiempoFormateado}</span>
+                                            <span>Tiempo</span>
+                                        </div>
+                                    </div>
                                 `);
                             }
 
-                            filaActual++;
-                            colActual = 0;
-                            intentoActual = "";
+                            // Preparamos siguiente turno (si no hemos ganado)
+                            if (!data.win && filaActual < 5) {
+                                filaActual++;
+                                colActual = 0;
+                                intentoActual = "";
+                                animando = false;
+                            }
                         }, tiempoTotalAnimacion);
                     })
-                    .catch(error => console.error("Error de conexión:", error));
+                    .catch(error => {
+                        console.error("Error de conexión:", error);
+                        animando = false;
+                    });
                 }
 
             } else if (intentoActual.length < 5 && letra.length === 1) {
@@ -317,7 +391,7 @@
             else if (e.key.length === 1 && e.key.match(/[a-zñ]/i)) manejarEntrada(e.key.toUpperCase());
         });
 
-        // 5. INICIALIZADOR
+        // 5. INICIALIZADOR AL CARGAR LA PÁGINA
         fetch('/wordle/daily/', {
             method: 'POST',
             headers: {
@@ -329,15 +403,34 @@
         .then(response => response.json())
         .then(data => {
             if (data.status === "200") {
-                console.log("Palabra generada con éxito. ¡A jugar!");
+                console.log("Palabra del día lista para jugar.");
             } else if (data.status === "409") {
-                alert("Ya has jugado hoy. ¡Vuelve mañana!");
-            } else {
-                console.error("Error del servidor:", data.mssg);
+                juegoTerminado = true;
+                animando = true;
+
+                const stats = data.stats || { attempts: 0, score: 0, time: 0 };
+                const tiempoFormateado = formatearTiempo(stats.time);
+
+                mostrarModalFinal("YA HAS JUGADO HOY", `
+                    <div class="flex justify-around mb-6 text-gray-600 text-sm mt-4">
+                        <div class="flex flex-col items-center">
+                            <span class="font-bold text-[#700040] text-xl">${stats.attempts}/6</span>
+                            <span>Intentos</span>
+                        </div>
+                        <div class="flex flex-col items-center">
+                            <span class="font-bold text-[#700040] text-xl">${tiempoFormateado}</span>
+                            <span>Tiempo</span>
+                        </div>
+                    </div>
+                    <div class="bg-[#F6F8FA] border-2 border-[#E3E8EC] p-4 rounded-xl mb-4">
+                        <p class="text-xs text-gray-400 uppercase tracking-widest font-bold mb-1">Tu Puntuación</p>
+                        <p class="text-6xl font-extrabold text-[#C9B458] font-bungee">${stats.score}</p>
+                    </div>
+                    <p class="text-sm text-gray-400 font-bold uppercase tracking-widest mt-2">Vuelve mañana para un nuevo reto</p>
+                `);
             }
         })
         .catch(error => console.error("Error de conexión:", error));
     </script>
-
 </body>
 </html>
