@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>{% block title %}UdL-Times | University Gaming Hub{% endblock %}</title>
+    <link href="https://fonts.googleapis.com" rel="preconnect"/>
+    <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+    <link href="https://fonts.googleapis.com/css2?family=Bungee&family=Inter:wght@400;500;600;700&display=swap"
+          rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
+          rel="stylesheet"/>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,typography,container-queries"></script>
+    <script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        primary: "#700040",
+                        "background-light": "#f8fafc",
+                        "background-dark": "#0f172a",
+                        secondary: "#f59e0b",
+                    },
+                    fontFamily: {
+                        display: ["Bungee", "cursive"],
+                        sans: ["Inter", "sans-serif"],
+                    },
+                    borderRadius: {
+                        DEFAULT: "0.75rem",
+                    },
+                },
+            },
+        };
+    </script>
+    <style type="text/tailwindcss">
+        .grid-pattern {
+            background-image: radial-gradient(circle, #00000010 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+        .dark .grid-pattern {
+            background-image: radial-gradient(circle, #ffffff10 1px, transparent 1px);
+        }
+    </style>
+    {% block extra_head %}{% endblock %}
+</head>
+<body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 min-h-screen font-sans grid-pattern">
+
+<header class="sticky top-0 z-50 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800">
+    <div class="max-w-7xl mx-auto px-4 h-20 flex items-center justify-between">
+        <div class="flex items-center gap-4">
+            <div class="flex flex-col items-center">
+                <span class="material-symbols-outlined text-primary text-3xl">school</span>
+                <span class="text-[8px] font-bold leading-none dark:text-slate-400 uppercase">UdL</span>
+            </div>
+            <a href="{% url 'home' %}">
+                <h1 class="font-display text-2xl tracking-tighter text-primary">UDL-TIMES</h1>
+            </a>
+        </div>
+        <div class="flex items-center gap-4">
+            {% if user.is_authenticated %}
+            <a href="{% url 'profile' %}"
+               class="font-semibold text-slate-700 dark:text-slate-300 hover:text-primary transition-colors">
+                {{ user.username }}
+            </a>
+            <form method="post" action="{% url 'logout' %}">
+                {% csrf_token %}
+                <button type="submit"
+                        class="px-6 py-2 border-2 border-primary text-primary hover:bg-primary hover:text-white font-bold transition-all duration-200 rounded-full">
+                    LOG OUT
+                </button>
+            </form>
+            {% else %}
+            <button class="px-6 py-2 border-2 border-primary text-primary hover:bg-primary hover:text-white font-bold transition-all duration-200 rounded-full"
+                    onclick="document.getElementById('login-modal').classList.remove('hidden')">
+                LOG IN
+            </button>
+            <button class="px-6 py-2 bg-primary text-white hover:bg-opacity-90 font-bold transition-all duration-200 rounded-full"
+                    onclick="document.getElementById('register-modal').classList.remove('hidden')">
+                REGISTER
+            </button>
+            {% endif %}
+        </div>
+    </div>
+</header>
+
+<main class="max-w-7xl mx-auto px-4 py-12">
+    {% block content %}{% endblock %}
+</main>
+
+{% if not user.is_authenticated %}
+
+
+{% include "registration/signup.html" %}
+{% include "registration/login.html" %}
+
+
+{% endif %}
+
+<div class="fixed -bottom-10 -left-10 w-40 h-40 bg-primary/20 rounded-full blur-3xl pointer-events-none"></div>
+<div class="fixed top-1/2 -right-10 w-32 h-32 bg-secondary/20 rounded-full blur-3xl pointer-events-none"></div>
+
+{% block extra_scripts %}
+
+{% endblock %}
+</body>
+</html>
