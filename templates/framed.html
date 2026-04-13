@@ -31,8 +31,9 @@
     <!-- progress bar (4 images) -->
     <div id="progress-bar" class="flex w-full gap-2 mb-8"></div>
 
-    <!-- UNPUT AND BUTTONS -->
-    <div class="space-y-4">
+
+    <!-- INPUT AND BUTTONS -->
+    <div id="input-section" class="space-y-4">
         <div class="relative">
             <input
                 id = "response-input"
@@ -60,6 +61,20 @@
             </button>
         </div>
     </div>
+    <!-- SUCCESS STATE (hidden by default) -->
+    <div id="success-section" class="hidden space-y-4">
+        <div class="h-14 border-2 border-emerald-500 bg-emerald-50 dark:bg-emerald-950 rounded-xl flex items-center px-4 text-emerald-700 dark:text-emerald-300 font-bold gap-3">
+            <span class="material-symbols-outlined fill-1">check_circle</span>
+            <span>Excellent! You guessed the location correctly!</span>
+        </div>
+        <div class="flex gap-3">
+            <a href="/" class="flex-1 py-4 bg-primary text-white font-display text-xl rounded-xl hover:bg-opacity-90 transition-all active:scale-[0.98] shadow-lg text-center">
+                Back to the menu
+            </a>
+        </div>
+    </div>
+
+    <!-- HOW TO PLAY -->
     <div class="mt-12 p-6 bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 rounded-xl">
         <h3 class="font-display text-sm text-primary mb-3">HOW TO PLAY</h3>
         <ul class="text-sm space-y-2 text-slate-600 dark:text-slate-400">
@@ -83,7 +98,8 @@
 let images = [];
 let currentIndex = 0;
 let conceptName = '';
-let visited = []
+let visited = [];
+let guesses = [];
 
 function initVisited() {
     visited = new Array(images.length).fill(false);
@@ -146,6 +162,30 @@ responseInput.addEventListener('input', function () {
         }
     },);
 });
+
+function submitAnswer() {
+    const input = document.getElementById('response-input');
+    const userAnswer = input.value.trim();
+    if (!userAnswer) return;
+
+    const isCorrect = userAnswer.toLowerCase() === conceptName.toLowerCase();
+    input.value = '';
+
+    if (isCorrect) {
+        showSuccessState();
+    } else {
+        const next = getNextUnvisited();
+        if (next !== -1) {
+            showImage(next);
+        }
+    }
+}
+
+
+function showSuccessState() {
+    document.getElementById('input-section').classList.add('hidden');
+    document.getElementById('success-section').classList.remove('hidden');
+}
 
 function canAccess(index) {
     if (index === 0) return true;
