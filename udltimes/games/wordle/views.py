@@ -19,6 +19,22 @@ def check_guess(request):
     if request.method == 'POST':
         data = json.loads(request.body)
         guess = data.get('guess', '').upper()
+        username = data.get('username')
+        attempt = data.get('attempt', 1)
+        time_taken = data.get('time', 0)  #  los segundos que ha tardado
+
+        # validación del diccionario
+        diccionario_path = os.path.join(settings.BASE_DIR, 'udltimes', 'games', 'wordle', 'diccionario.txt')
+        try:
+            with open(diccionario_path, "r", encoding="utf-8") as f:
+                # Leemos todas las palabras y las pasamos a mayúsculas
+                palabras_validas = [w.strip().upper() for w in f.readlines()]
+
+                if guess not in palabras_validas:
+                    # Si no existe, devolvemos un estado especial
+                    return JsonResponse({"status": "invalid_word", "mssg": "La palabra no existe"})
+        except FileNotFoundError:
+            pass  # Si falla el archivo, dejamos jugar (por si acaso)
 
         # palabra de hoy
         word_obj = Wordle.objects.filter(date=datetime.date.today()).first()
@@ -48,6 +64,25 @@ def check_guess(request):
 
         # comprobamos si ha ganado
         win = (colors == ["correct"] * 5)
+
+        if username:
+            user = User.objects.filter(username=username).first()
+            if user:
+                stat, created = StatsWordle.objects.get_or_create(user=user, game=word_obj)
+
+                # si gana la partida, o si gasta su último intento
+                if win or attempt == 6:
+                    stat.completed = True
+                    stat.attempts = attempt  # <-- NUEVO: Guarda intentos
+                    stat.time_taken = time_taken  # <-- NUEVO: Guarda el tiempo
+
+                    #  Calcula y guarda la puntuación
+                    if win:
+                        stat.score = 100 - ((attempt - 1) * 10)
+                    else:
+                        stat.score = 0
+
+                    stat.save()
 
         # devuelvo el resultado
         return JsonResponse({
@@ -81,7 +116,16 @@ def dailyWordle(request):
         stat = StatsWordle.objects.filter(user=user, game__date=today_date).first()
 
         if stat and stat.completed:
-            return JsonResponse({"status": "409", "mssg": "El wordle del dia ya ha sido jugado"})
+            # devuelve también las estadísticas guardadas (si ya jugó + más stats para que se vea interesante)
+            return JsonResponse({
+                "status": "409",
+                "mssg": "El wordle del dia ya ha sido jugado",
+                "stats": {
+                    "attempts": getattr(stat, 'attempts', 0),
+                    "score": getattr(stat, 'score', 0),
+                    "time": getattr(stat, 'time_taken', 0)
+                }
+            })
 
         # PALABRA DEL DIA
         wordle_obj = Wordle.objects.filter(date=today_date).first()
