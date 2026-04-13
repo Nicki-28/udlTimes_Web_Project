@@ -55,17 +55,32 @@
                 class="flex-1 py-4 bg-primary text-white font-display text-xl rounded-xl hover:bg-opacity-90 transition-all active:scale-[0.98] shadow-lg">
                 SUBMIT
             </button>
-            <button onclick="skipImage()"
+            <button id="skip-end-btn"
+                onclick="handleSkipOrEnd()"
                 class="px-8 py-4 border-2 border-slate-900 dark:border-slate-100 font-display text-xl rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
-                SKIP
+                
             </button>
         </div>
     </div>
+
     <!-- SUCCESS STATE (hidden by default) -->
     <div id="success-section" class="hidden space-y-4">
         <div class="h-14 border-2 border-emerald-500 bg-emerald-50 dark:bg-emerald-950 rounded-xl flex items-center px-4 text-emerald-700 dark:text-emerald-300 font-bold gap-3">
             <span class="material-symbols-outlined fill-1">check_circle</span>
             <span>Excellent! You guessed the location correctly!</span>
+        </div>
+        <div class="flex gap-3">
+            <a href="/" class="flex-1 py-4 bg-primary text-white font-display text-xl rounded-xl hover:bg-opacity-90 transition-all active:scale-[0.98] shadow-lg text-center">
+                Back to the menu
+            </a>
+        </div>
+    </div>
+
+        <!-- LOSS STATE (hidden by default) -->
+    <div id="loss-section" class="hidden space-y-4">
+        <div class="h-14 border-2 border-red-500 bg-red-50 dark:bg-red-950 rounded-xl flex items-center px-4 text-red-700 dark:text-red-300 font-bold gap-3">
+            <span class="material-symbols-outlined fill-1">cancel</span>
+            <span>Game over! The answer was: <span id="loss-concept" class="underline"></span></span>
         </div>
         <div class="flex gap-3">
             <a href="/" class="flex-1 py-4 bg-primary text-white font-display text-xl rounded-xl hover:bg-opacity-90 transition-all active:scale-[0.98] shadow-lg text-center">
@@ -210,6 +225,7 @@ function showImage(index) {
     visited[index] = true;
 
     updateProgressBar();
+    updateSkipButton();
 }
 
 function getNextUnvisited(){
@@ -225,6 +241,37 @@ function skipImage() {
         showImage(next);
     }
 }
+
+function handleSkipOrEnd(){
+    const next = getNextUnvisited();
+    if (next !== -1) {
+        showImage(next);
+    } else {
+        showLossState();
+    }
+}
+function isLastFrame() {
+    return getNextUnvisited() === -1;
+}
+
+function updateSkipButton() {
+    const btn = document.getElementById('skip-end-btn');
+    if (!btn) return;
+    if (isLastFrame()) {
+        btn.textContent = 'END';
+        btn.className = 'px-8 py-4 border-2 border-red-600 text-red-600 font-display text-xl rounded-xl hover:bg-red-50 dark:hover:bg-red-950 transition-colors';
+    } else {
+        btn.textContent = 'SKIP';
+        btn.className = 'px-8 py-4 border-2 border-slate-900 dark:border-slate-100 font-display text-xl rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors';
+    }
+}
+
+function showLossState() {
+    document.getElementById('input-section').classList.add('hidden');
+    document.getElementById('loss-section').classList.remove('hidden');
+    document.getElementById('loss-concept').textContent = conceptName;
+}
+
 
 function updateProgressBar() {
     const container = document.getElementById('progress-bar');
@@ -255,6 +302,8 @@ function updateProgressBar() {
         container.appendChild(segment);
     }
 }
+
+
 
 document.addEventListener('DOMContentLoaded', loadGame);
 </script>
