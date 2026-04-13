@@ -7,8 +7,8 @@
   
   <link href="https://fonts.googleapis.com" rel="preconnect"/>
   <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
-  <link href="https://fonts.googleapis.com/css2?family=Bungee&amp;family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
-  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Bungee&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
   <script src="https://cdn.tailwindcss.com?plugins=forms,typography,container-queries"></script>
 
     <script>
@@ -333,7 +333,7 @@
         if (palabrasSeleccionadas.length >= 4) return;
         palabrasSeleccionadas.push(palabra);
       }
-        actualizarSeleccion();
+      actualizarSeleccion();
     }
 
     function deselectAll() {
@@ -352,31 +352,139 @@
 
 
     // SUBMIT con animaciones
-    function comprobarJugada() {
-      if (palabrasSeleccionadas.length !== 4) return; // tiene que haber 4 marcadas
+    async function comprobarJugada() {
+      if (enviando || palabrasSeleccionadas.length !== 4) return;
+      enviando = true;
 
       // buscamos si la seleccion coincide exactamente con alguna solucion
-      const categoriaEncontrada = soluciones.find(solucion => {
-        return solucion.palabras.every(p => palabrasSeleccionadas.includes(p));
-      });
+      const categoriaEncontrada = soluciones.find(solucion =>
+              solucion.palabras.every(p => palabrasSeleccionadas.includes(p))
+      );
+
+      const botonesSeleccionados = [...document.querySelectorAll(".connection-card.selected")];
 
       if (categoriaEncontrada) {
-        categoriasAcertadas.push(categoriaEncontrada); // la pasamos arriba
-        palabrasActivas = palabrasActivas.filter(p => !palabrasSeleccionadas.includes(p)); // la borramos de abajo
-        palabrasSeleccionadas = []; // vaciamos la seleccion
+        // correcto: flip secuencial con reveal del color de la categoría
+        for (let i = 0; i < botonesSeleccionados.length; i++) {
+          const btn = botonesSeleccionados[i];
+          await esperar(i * 110);
 
-        // comprobar si hemos ganado
-        if (categoriasAcertadas.length == 4) {
-          setTimeout(() => alert("CONGRATULATIONS! You won."), 300);
+          // flip hacia afuera
+          btn.classList.add("flip-out");
+          await esperar(300);
+
+          // cambiamos color y hacemos flip hacia adentro
+          btn.style.background = categoriaEncontrada.color;
+          btn.style.color = textoParaFondo(categoriaEncontrada.color);
+          btn.style.boxShadow = "none";
+          btn.classList.remove("flip-out", "selected");
+          btn.classList.add("flip-reveal");
+          await esperar(300);
+          btn.classList.remove("flip-reveal");
         }
+
+        await esperar(180);
+        categoriasAcertadas.push(categoriaEncontrada);
+        palabrasActivas = palabrasActivas.filter(p => !palabrasSeleccionadas.includes(p));
+        palabrasSeleccionadas = [];
+        limpiarOneAway();
+        anadirCategoriaResuelta(categoriaEncontrada); // solo añade la nueva fila
+        dibujarJuego(); // reconstruye el grid sin tocar las resueltas
+
+        if (categoriasAcertadas.length === 4) {
+          await esperar(300);
+          mostrarToast("Congratulations! You won!", 3500);
+        }
+
       } else {
+        // incorrecto
+        const oneAway = soluciones.find(sol =>
+          sol.palabras.filter(p => palabrasSeleccionadas.includes(p)).length === 3
+        );
+        if (oneAway) mostrarOneAway();
+
+        botonesSeleccionados.forEach(btn => btn.classList.add("shake"));
+        await esperar(480);
+        botonesSeleccionados.forEach(btn => btn.classList.remove("shake"));
+
         vidas--;
+        actualizarVidas(); // solo actualizamos los puntos, no el grid
+
         if (vidas <= 0) {
-          setTimeout(() => alert("GAME OVER! You've run out of lives."), 300);
+          await esperar(400);
+          palabrasSeleccionadas = [];
+          actualizarSeleccion();
+          await esperar(200);
+          await revelarRespuestas();
+          mostrarToast("Better luck next time!", 4000);
         }
       }
 
-      dibujarJuego();
+      enviando = false;
+    }
+
+    // REVELAR RESPUESTAS cuando te quedas sin vida
+    async function revelarRespuestas() {
+      // Categorías que aún no se han acertado
+      const pendientes = soluciones.filter(sol =>
+        !categoriasAcertadas.some(a => a.titulo === sol.titulo)
+      );
+
+      for (const cat of pendientes) {
+        // Cogemos las cartas de esta categoría que aún están en el grid
+        const cartas = [...document.querySelectorAll(".connection-card")].filter(btn =>
+          cat.palabras.includes(btn.dataset.palabra)
+        );
+
+        // Flip out uno a uno
+        for (let i = 0; i < cartas.length; i++) {
+          const btn = cartas[i];
+          await esperar(i * 110);
+          btn.classList.add("flip-out");
+          await esperar(300);
+          btn.style.background = cat.color;
+          btn.style.color = textoParaFondo(cat.color);
+          btn.style.boxShadow = "none";
+          btn.classList.remove("flip-out", "selected");
+          btn.classList.add("flip-reveal");
+          await esperar(300);
+          btn.classList.remove("flip-reveal");
+        }
+
+        await esperar(200);
+
+        // Añadimos la fila resuelta con animación
+        categoriasAcertadas.push(cat);
+        palabrasActivas = palabrasActivas.filter(p => !cat.palabras.includes(p));
+        anadirCategoriaResuelta(cat);
+        dibujarJuego();
+
+        await esperar(300);
+      }
+    }
+
+    // UTILIDADES
+    function esperar(ms) {
+      return new Promise(resolve => setTimeout(resolve, ms));
+    }
+
+    function mostrarToast(msg, duracion = 2200) {
+      const toast = document.getElementById("toast");
+      toast.textContent = msg;
+      toast.classList.add("show");
+      clearTimeout(toast._timer);
+      toast._timer = setTimeout(() => toast.classList.remove("show"), duracion);
+    }
+
+    function mostrarOneAway() {
+      const slot = document.getElementById("one-away-slot");
+      slot.innerHTML = `<div class="one-away-badge">One away...</div>`;
+      clearTimeout(slot._ocTimer);
+      slot._ocTimer = setTimeout(() => slot.innerHTML = "", 2500);
+    }
+
+    function limpiarOneAway() {
+      document.getElementById("one-away-slot").innerHTML = "";
     }
 
     dibujarJuego();
