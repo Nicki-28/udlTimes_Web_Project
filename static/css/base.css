@@ -53,3 +53,7 @@
 .dark {
     --color-primary: #c0507a;
 }
+
+.dark .game-card {
+  box-shadow: 8px 8px 0px 0px rgba(192, 80, 122, 0.8);
+}
