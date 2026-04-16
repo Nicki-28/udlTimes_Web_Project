@@ -462,6 +462,26 @@
       document.getElementById("one-away-slot").innerHTML = "";
     }
 
+    async function guardarResultado(completed) {
+      const fallos = 4 - vidas;
+      try {
+        await fetch("{% url 'connections_save' %}", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-CSRFToken": "{{ csrf_token }}"
+          },
+          body: JSON.stringify({
+            fallos: fallos,
+            vidas: vidas,
+            completed: completed
+          })
+        });
+      } catch (error) {
+        console.error("Error guardando los puntos:", error);
+      }
+    }
+
     dibujarJuego();
   </script>
 {% endblock %}
