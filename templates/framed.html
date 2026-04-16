@@ -2,6 +2,11 @@
 
 {% block title %}UdL-Times | University Gaming Hub{% endblock %}
 
+{% block extra_css %}
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'css/framed.css' %}">
+{% endblock %}
+
 {% block content %}
 <div class="max-w-3xl mx-auto px-4 py-8 md:py-12">
     
@@ -110,19 +115,4 @@
 {% block extra_scripts %} 
     {% load static %}
     <script src="{% static 'js/framed.js' %}"></script>
-{% endblock %}
-
-{% block extra_css %} <style>
-    @keyframes pulse-soft {
-        0%, 100% { transform: scale(1); }
-        50% { transform: scale(1.05); }
-    }
-    .frame-active {
-        animation: pulse-soft 2s infinite ease-in-out;
-        box-shadow: 0 0 15px rgba(139, 92, 246, 0.4); /* Color morado de ejemplo */
-    }
-    .frame-transition {
-        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-    }
-</style>
 {% endblock %}

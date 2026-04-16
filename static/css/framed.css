@@ -1,0 +1,11 @@
+    @keyframes pulse-soft {
+        0%, 100% { transform: scale(1); }
+        50% { transform: scale(1.05); }
+    }
+    .frame-active {
+        animation: pulse-soft 2s infinite ease-in-out;
+        box-shadow: 0 0 15px rgba(139, 92, 246, 0.4); /* Color morado de ejemplo */
+    }
+    .frame-transition {
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    }
