@@ -17,7 +17,8 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 
-from udltimes.views import SignUpView, home, wordle_view, connections_view, framed_view, register_view, login_view, profile_view
+from udltimes.views import SignUpView, home, wordle_view, connections_view, framed_view, register_view, login_view, \
+    profile_view, connections_save_view
 from django.contrib.auth.views import LogoutView
 
 urlpatterns = [
@@ -27,6 +28,7 @@ urlpatterns = [
     path('', home, name='home'),
     path('admin/', admin.site.urls),
     path('accounts/signup/', SignUpView.as_view(), name='signup'),
+    path('connections/save/', connections_save_view, name='connections_save'),
     path('accounts/login/', login_view, name='login'),
     path("accounts/register/", register_view, name="register"),
     path('accounts/logout/', LogoutView.as_view(next_page='home'), name='logout'),
