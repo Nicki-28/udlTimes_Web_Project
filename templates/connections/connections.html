@@ -368,6 +368,7 @@
 
         if (categoriasAcertadas.length === 4) {
           await esperar(300);
+          await guardarResultado(true);
           mostrarToast("Congratulations! You won!", 3500);
         }
 
@@ -391,6 +392,7 @@
           actualizarSeleccion();
           await esperar(200);
           await revelarRespuestas();
+          await guardarResultado(false);
           mostrarToast("Better luck next time!", 4000);
         }
       }
