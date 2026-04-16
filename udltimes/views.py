@@ -1,3 +1,5 @@
+import re
+
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from django.contrib.auth import login, update_session_auth_hash
@@ -13,7 +15,6 @@ from django.conf import settings
 
 def wordle_view(request):
     return render(request, 'wordle.html')
-
 
 def connections_view(request):
     return render(request, 'connections/connections.html')

@@ -242,7 +242,7 @@ dependencies = [
 
 [package.metadata]
 requires-dist = [
-    { name = "django", specifier = ">=6.0.2" },
+    { name = "django", specifier = ">=5.0" },
     { name = "djangorestframework" },
     { name = "psycopg", extras = ["binary"], specifier = ">=3.1" },
     { name = "python-decouple", specifier = ">=3.8" },
