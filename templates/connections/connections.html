@@ -1,32 +1,8 @@
 {% extends "base.html" %}
 
-{% block title %}UdL-Times | University Gaming Hub{% endblock %}
+{% block title %}UdL-Times | Connections{% endblock %}
 
-{% block content %}
-    <script>
-    tailwind.config = {
-      darkMode: "class",
-      theme: {
-        extend: {
-          colors: {
-            primary: "#700040",
-            "primary-light": "#8a1a5a",
-            "primary-dark": "#5a0033",
-            "background-light": "#f8fafc",
-            "background-dark": "#0f172a",
-            secondary: "#f59e0b",
-          },
-          fontFamily: {
-            display: ["Bungee", "cursive"],
-            sans: ["Inter", "sans-serif"],
-          },
-          borderRadius: {
-            DEFAULT: "0.75rem",
-          },
-        },
-      },
-    };
-  </script>
+{% block extra_head %}
 
   <style>
     .grid-pattern {
@@ -167,13 +143,33 @@
     .flip-out    { animation: flipOut    0.3s ease forwards; }
     .flip-reveal { animation: flipReveal 0.3s ease forwards; }
   </style>
-</head>
+{% endblock %}
 
-<body class="bg-background-light text-slate-900 min-h-screen font-sans grid-pattern">
+{% block content %}
+  {# ── Overlay de inicio ── #}
+  <div id="intro-overlay" class="fixed inset-0 z-50 flex items-center justify-center" style="background: rgba(248,250,252,0.97)">
+    <div class="flex flex-col items-center gap-6 text-center px-8">
+      <div class="flex flex-col gap-1.5 mb-2">
+        <div class="flex gap-1.5">
+          <div class="w-10 h-5 rounded" style="background:#e9c46a"></div>
+          <div class="w-10 h-5 rounded" style="background:#f4a261"></div>
+        </div>
+        <div class="flex gap-1.5">
+          <div class="w-10 h-5 rounded" style="background:#e76f51"></div>
+          <div class="w-10 h-5 rounded" style="background:#c1440e"></div>
+        </div>
+      </div>
+      <h1 class="font-display text-4xl text-primary tracking-tight">CONNECTIONS</h1>
+      <p class="text-slate-500 text-sm font-medium">Create four groups of four!</p>
+      <button onclick="startGame()" class="mt-2 px-12 py-4 rounded-full bg-primary text-white font-bold text-sm hover:bg-primary-dark transition-colors shadow-lg shadow-primary/20">
+        PLAY
+      </button>
+    </div>
+  </div>
 
   <div id="toast"></div>
 
-  <main class="max-w-2xl mx-auto px-4 py-10">
+  <div class="max-w-2xl mx-auto">
 
     <div class="text-center mb-6">
       <h2 class="text-base font-medium text-slate-500">Create four groups of four!</h2>
@@ -201,8 +197,11 @@
         BACK TO GAMES HUB
       </a>
     </div>
-  </main>
+  </div>
 
+{% endblock %}
+
+{% block extra_scripts %}
   <script>
     // soluciones secretas (mas adelante django lo pillara de la BBDD)
     const soluciones = [
@@ -229,6 +228,13 @@
 
     function textoParaFondo(color) {
       return "#5a0033";
+    }
+
+    function startGame() {
+      const overlay = document.getElementById("intro-overlay");
+      overlay.style.transition = "opacity 0.4s ease";
+      overlay.style.opacity = "0";
+      setTimeout(() => overlay.remove(), 400);
     }
 
     function anadirCategoriaResuelta(cat) {
@@ -459,5 +465,3 @@
     dibujarJuego();
   </script>
 {% endblock %}
-</body>
-</html>
