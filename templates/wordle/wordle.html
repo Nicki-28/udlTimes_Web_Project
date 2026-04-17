@@ -220,6 +220,47 @@
             keyboard.appendChild(filaDiv);
         });
 
+        // PRIORIDAD DE COLORES
+        const prioridadColor = { correct: 3, present: 2, absent: 1 };
+        const estadoTeclado = {};
+
+        function actualizarTeclado(letra, estado) {
+            const prioridadActual = prioridadColor[estadoTeclado[letra]] || 0;
+            const prioridadNueva = prioridadColor[estado] || 0;
+
+            // Solo actualizamos si el nuevo estado tiene mayor prioridad
+            if (prioridadNueva <= prioridadActual) return;
+
+            estadoTeclado[letra] = estado;
+            const tecla = document.getElementById(`key-${letra}`);
+            if (!tecla) return;
+
+            //cambio colores del teclado
+            tecla.classList.remove(
+                'bg-key-default', 'hover:bg-key-hover', 'text-[#1A1A1A]',
+                'bg-key-correct', 'hover:bg-key-correct',
+                'bg-key-present', 'hover:bg-key-present',
+                'bg-key-absent', 'hover:bg-key-absent',
+                'text-white'
+            );
+
+            if (estado === 'correct') {
+                tecla.classList.add('bg-key-correct', 'hover:bg-key-correct', 'text-white');
+            } else if (estado === 'present') {
+                tecla.classList.add('bg-key-present', 'hover:bg-key-present', 'text-white');
+            } else if (estado === 'absent') {
+                tecla.classList.add('bg-key-absent', 'hover:bg-key-absent', 'text-white');
+            }
+        }
+
+        function shakeFilaActual(numCasillas) {
+            for (let i = 0; i < numCasillas; i++) {
+                const casilla = document.getElementById(`box-${filaActual}${i}`);
+                casilla.classList.add('shake');
+                setTimeout(() => casilla.classList.remove('shake'), 500);
+            }
+        }
+
         // 3. LÓGICA CENTRAL DEL JUEGO
         function manejarEntrada(letra) {
             if (juegoTerminado || animando) return;
@@ -232,147 +273,154 @@
                 }
 
             } else if (letra === "ENTER") {
-                if (intentoActual.length === 5) {
-                    animando = true;
+                if (intentoActual.length < 5) {
+                    shakeFilaActual(intentoActual.length);
+                    return;
+                }
 
-                    const tiempoFinal = Date.now();
-                    const segundosTranscurridos = Math.floor((tiempoFinal - tiempoInicio) / 1000);
+                animando = true;
 
-                    fetch('/wordle/check-guess/', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-CSRFToken': getCookie('csrftoken')
-                        },
-                        body: JSON.stringify({
-                            guess: intentoActual,
-                            username: "nicole",
-                            attempt: filaActual + 1,
-                            time: segundosTranscurridos
-                        })
+                const tiempoFinal = Date.now();
+                const segundosTranscurridos = Math.floor((tiempoFinal - tiempoInicio) / 1000);
+
+                fetch('/wordle/check-guess/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCookie('csrftoken')
+                    },
+                    body: JSON.stringify({
+                        guess: intentoActual,
+                        attempt: filaActual + 1,
+                        time: segundosTranscurridos
                     })
-                    .then(response => response.json())
-                    .then(data => {
+                })
+                .then(response => response.json())
+                .then(data => {
 
-                        // manejo de la palabra no valida
-                        if (data.status === "invalid_word") {
-                            for (let i = 0; i < 5; i++) {
-                                const casilla = document.getElementById(`box-${filaActual}${i}`);
-                                casilla.classList.add('shake');
+                    if (data.status === "401") {
+                        alert(data.mssg);
+                        animando = false;
+                        return;
+                    }
 
-                                setTimeout(() => {
-                                    casilla.classList.remove('shake');
-                                    casilla.innerText = "";
-                                }, 500);
-                            }
+                    if (data.status === "invalid_word") {
+                        shakeFilaActual(5);
+                        setTimeout(() => {
+                            animando = false;
+                        }, 500);
+                        return;
+                    }
 
-                            setTimeout(() => {
-                                intentoActual = "";
-                                colActual = 0;
-                                animando = false;
-                            }, 500);
+                    // Palabra válida
+                    const coloresTailwind = {
+                        'correct': 'bg-key-correct text-white border-key-correct',
+                        'present': 'bg-key-present text-white border-key-present',
+                        'absent':  'bg-key-absent  text-white border-key-absent'
+                    };
 
-                            return; // No avanzamos de fila
-                        }
+                    const tiempoTotalAnimacion = 5 * 600 + 600;
 
-                        // palabra valida
-                        const coloresTailwind = {
-                            'correct': 'bg-key-correct text-white border-key-correct',
-                            'present': 'bg-key-present text-white border-key-present',
-                            'absent': 'bg-key-absent text-white border-key-absent'
-                        };
-
-                        const tiempoTotalAnimacion = 5 * 600 + 600;
-
-                        for (let i = 0; i < 5; i++) {
-                            const casilla = document.getElementById(`box-${filaActual}${i}`);
-                            const colorEstado = data.colors[i];
-                            setTimeout(() => {
-                                casilla.classList.add('anim-flip');
-                                setTimeout(() => {
-                                    casilla.className = `w-14 h-14 flex items-center justify-center text-2xl font-bold uppercase transition-all duration-500 ${coloresTailwind[colorEstado]}`;
-                                }, 600);
-                            }, i * 600);
-                        }
+                    for (let i = 0; i < 5; i++) {
+                        const casilla = document.getElementById(`box-${filaActual}${i}`);
+                        const colorEstado = data.colors[i];
+                        const letraActual = intentoActual[i];
 
                         setTimeout(() => {
-                            if (data.win) {
-                                juegoTerminado = true;
+                            casilla.classList.add('anim-flip');
+                            setTimeout(() => {
+                                casilla.className = `w-14 h-14 flex items-center justify-center text-2xl font-bold uppercase transition-all duration-500 ${coloresTailwind[colorEstado]}`;
+                                actualizarTeclado(letraActual, colorEstado);
+                            }, 600);
+                        }, i * 600);
+                    }
 
-                                // Efecto ola
-                                for (let i = 0; i < 5; i++) {
-                                    setTimeout(() => {
-                                        const box = document.getElementById(`box-${filaActual}${i}`);
-                                        box.classList.add('-translate-y-3');
-                                        setTimeout(() => box.classList.remove('-translate-y-3'), 150);
-                                    }, i * 150);
-                                }
+                    setTimeout(() => {
+                        if (data.win) {
+                            juegoTerminado = true;
+                            animando = false;
 
-                                const intentosUsados = filaActual + 1;
-                                const puntuacionFinal = 100 - ((intentosUsados - 1) * 10);
-                                const tiempoFormateado = formatearTiempo(segundosTranscurridos);
-
+                            // Efecto ola
+                            for (let i = 0; i < 5; i++) {
                                 setTimeout(() => {
-                                    mostrarModalFinal("¡HAS GANADO!", `
-                                        <div class="flex justify-around mb-6 text-gray-600 text-sm mt-4">
-                                            <div class="flex flex-col items-center">
-                                                <span class="font-bold text-[#700040] text-xl">${intentosUsados}/6</span>
-                                                <span>Intentos</span>
-                                            </div>
-                                            <div class="flex flex-col items-center">
-                                                <span class="font-bold text-[#700040] text-xl">${tiempoFormateado}</span>
-                                                <span>Tiempo</span>
-                                            </div>
-                                        </div>
-                                        <div class="bg-[#F6F8FA] border-2 border-[#E3E8EC] p-4 rounded-xl mb-4">
-                                            <p class="text-xs text-gray-400 uppercase tracking-widest font-bold mb-1">Puntuación Total</p>
-                                            <p class="text-6xl font-extrabold text-[#C9B458] font-bungee">${puntuacionFinal}</p>
-                                        </div>
-                                    `);
-                                }, 1500);
+                                    const box = document.getElementById(`box-${filaActual}${i}`);
+                                    box.classList.add('-translate-y-3');
+                                    setTimeout(() => box.classList.remove('-translate-y-3'), 150);
+                                }, i * 150);
+                            }
 
-                                setTimeout(() => {
-                                    var duration = 3 * 1000;
-                                    var end = Date.now() + duration;
-                                    (function frame() {
-                                        confetti({ particleCount: 3, angle: 60, spread: 55, origin: { x: 0, y: 0.8 } });
-                                        confetti({ particleCount: 3, angle: 120, spread: 55, origin: { x: 1, y: 0.8 } });
-                                        if (Date.now() < end) requestAnimationFrame(frame);
-                                    }());
-                                }, 900);
+                            const intentosUsados = filaActual + 1;
+                            const puntuacionFinal = 100 - ((intentosUsados - 1) * 10);
+                            const tiempoFormateado = formatearTiempo(segundosTranscurridos);
 
-                            } else if (filaActual === 5) {
-                                juegoTerminado = true;
-                                const tiempoFormateado = formatearTiempo(segundosTranscurridos);
-                                mostrarModalFinal("¡OH NO!", `
-                                    <p class="text-gray-600 mb-6">Te has quedado sin intentos.</p>
-                                    <div class="flex justify-around mb-6 text-gray-600 text-sm">
+                            setTimeout(() => {
+                                mostrarModalFinal("¡HAS GANADO!", `
+                                    <div class="flex justify-around mb-6 text-gray-600 text-sm mt-4">
                                         <div class="flex flex-col items-center">
-                                            <span class="font-bold text-gray-400 text-xl">0</span>
-                                            <span>Puntos</span>
+                                            <span class="font-bold text-[#700040] text-xl">${intentosUsados}/6</span>
+                                            <span>Intentos</span>
                                         </div>
                                         <div class="flex flex-col items-center">
-                                            <span class="font-bold text-gray-400 text-xl">${tiempoFormateado}</span>
+                                            <span class="font-bold text-[#700040] text-xl">${tiempoFormateado}</span>
                                             <span>Tiempo</span>
                                         </div>
                                     </div>
+                                    <div class="bg-[#F6F8FA] border-2 border-[#E3E8EC] p-4 rounded-xl mb-4">
+                                        <p class="text-xs text-gray-400 uppercase tracking-widest font-bold mb-1">Puntuación Total</p>
+                                        <p class="text-6xl font-extrabold text-[#C9B458] font-bungee">${puntuacionFinal}</p>
+                                    </div>
                                 `);
-                            }
+                            }, 1500);
 
-                            // Preparamos siguiente turno (si no hemos ganado)
-                            if (!data.win && filaActual < 5) {
-                                filaActual++;
-                                colActual = 0;
-                                intentoActual = "";
-                                animando = false;
-                            }
-                        }, tiempoTotalAnimacion);
-                    })
-                    .catch(error => {
-                        console.error("Error de conexión:", error);
-                        animando = false;
-                    });
-                }
+                            setTimeout(() => {
+                                var duration = 3 * 1000;
+                                var end = Date.now() + duration;
+                                (function frame() {
+                                    confetti({ particleCount: 3, angle: 60, spread: 55, origin: { x: 0, y: 0.8 } });
+                                    confetti({ particleCount: 3, angle: 120, spread: 55, origin: { x: 1, y: 0.8 } });
+                                    if (Date.now() < end) requestAnimationFrame(frame);
+                                }());
+                            }, 900);
+
+                        } else if (filaActual === 5) {
+                            juegoTerminado = true;
+                            animando = false;
+
+                            const tiempoFormateado = formatearTiempo(segundosTranscurridos);
+                            const palabraCorrecta = data.word ? data.word.toUpperCase() : "";
+
+                            mostrarModalFinal("¡OH NO!", `
+                                <p class="text-gray-600 mb-4">Te has quedado sin intentos.</p>
+                                ${palabraCorrecta ? `
+                                <div class="bg-[#F6F8FA] border-2 border-[#E3E8EC] p-3 rounded-xl mb-4">
+                                    <p class="text-xs text-gray-400 uppercase tracking-widest font-bold mb-1">La palabra era</p>
+                                    <p class="text-3xl font-extrabold text-[#700040] font-bungee">${palabraCorrecta}</p>
+                                </div>` : ""}
+                                <div class="flex justify-around mb-6 text-gray-600 text-sm">
+                                    <div class="flex flex-col items-center">
+                                        <span class="font-bold text-gray-400 text-xl">0</span>
+                                        <span>Puntos</span>
+                                    </div>
+                                    <div class="flex flex-col items-center">
+                                        <span class="font-bold text-gray-400 text-xl">${tiempoFormateado}</span>
+                                        <span>Tiempo</span>
+                                    </div>
+                                </div>
+                            `);
+                        }
+
+                        if (!data.win && filaActual < 5) {
+                            filaActual++;
+                            colActual = 0;
+                            intentoActual = "";
+                            animando = false;
+                        }
+                    }, tiempoTotalAnimacion);
+                })
+                .catch(error => {
+                    console.error("Error de conexión:", error);
+                    animando = false;
+                });
 
             } else if (intentoActual.length < 5 && letra.length === 1) {
                 const casilla = document.getElementById(`box-${filaActual}${colActual}`);
@@ -398,11 +446,13 @@
                 'Content-Type': 'application/json',
                 'X-CSRFToken': getCookie('csrftoken')
             },
-            body: JSON.stringify({ username: "nicole" })
+            body: JSON.stringify({})
         })
         .then(response => response.json())
         .then(data => {
-            if (data.status === "200") {
+            if (data.status === "401") {
+                console.log("El usuario debe iniciar sesión.");
+            } else if (data.status === "200") {
                 console.log("Palabra del día lista para jugar.");
             } else if (data.status === "409") {
                 juegoTerminado = true;
