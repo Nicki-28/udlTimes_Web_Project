@@ -17,7 +17,8 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 
-from udltimes.views import SignUpView, profile_view, home, wordle_view, connections_view, framed_view
+from udltimes.views import SignUpView, home, wordle_view, connections_view, framed_view, register_view, login_view, profile_view
+from django.contrib.auth.views import LogoutView
 from udltimes.games.wordle.views import check_guess,dailyWordle
 
 urlpatterns = [
@@ -28,7 +29,9 @@ urlpatterns = [
     path('', home, name='home'),
     path('admin/', admin.site.urls),
     path('accounts/signup/', SignUpView.as_view(), name='signup'),
-    path('accounts/profile/', profile_view, name='profile'),
-    path('accounts/', include('django.contrib.auth.urls')),
+    path('accounts/login/', login_view, name='login'),
+    path("accounts/register/", register_view, name="register"),
+    path('accounts/logout/', LogoutView.as_view(next_page='home'), name='logout'),
+    path('profile/', profile_view, name='profile'),
     path('wordle/daily/', dailyWordle, name='dailyWordle'),
 ]
