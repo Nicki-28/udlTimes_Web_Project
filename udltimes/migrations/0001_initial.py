@@ -22,10 +22,11 @@ class Migration(migrations.Migration):
             ],
         ),
         migrations.CreateModel(
-            name='Framed',
+            name='FramedConcept',
             fields=[
-                ('date', models.DateField(primary_key=True, serialize=False)),
-                ('paraula', models.CharField(max_length=100)),
+                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('concept', models.CharField(max_length=200, unique=True)),
+                ('description', models.CharField(blank=True)),
             ],
         ),
         migrations.CreateModel(
@@ -43,6 +44,13 @@ class Migration(migrations.Migration):
             ],
         ),
         migrations.CreateModel(
+            name='Framed',
+            fields=[
+                ('date', models.DateField(primary_key=True, serialize=False)),
+                ('concept', models.ForeignKey(blank=True, on_delete=django.db.models.deletion.CASCADE, related_name='games', to='udltimes.framedconcept')),
+            ],
+        ),
+        migrations.CreateModel(
             name='ConnectionsWord',
             fields=[
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
@@ -54,15 +62,16 @@ class Migration(migrations.Migration):
             },
         ),
         migrations.CreateModel(
-            name='FramedGameData',
+            name='FramedConceptImage',
             fields=[
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('order', models.IntegerField()),
-                ('image', models.CharField(max_length=1000)),
-                ('game', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='udltimes.framed')),
+                ('image_url', models.URLField(max_length=500)),
+                ('order', models.PositiveBigIntegerField()),
+                ('concept', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='images', to='udltimes.framedconcept')),
             ],
             options={
-                'constraints': [models.UniqueConstraint(fields=('game', 'order'), name='unique_game_order_framedgamedata')],
+                'ordering': ['order'],
+                'unique_together': {('concept', 'order')},
             },
         ),
         migrations.CreateModel(
@@ -81,12 +90,13 @@ class Migration(migrations.Migration):
             name='StatsFramed',
             fields=[
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('value', models.CharField(max_length=100)),
+                ('images_needed', models.PositiveSmallIntegerField(blank=True, null=True)),
+                ('guessed', models.BooleanField(default=False)),
                 ('game', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='udltimes.framed')),
                 ('user', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL)),
             ],
             options={
-                'constraints': [models.UniqueConstraint(fields=('user', 'game'), name='unique_user_game_statsframed')],
+                'unique_together': {('user', 'game')},
             },
         ),
         migrations.CreateModel(

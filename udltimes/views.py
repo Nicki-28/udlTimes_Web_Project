@@ -12,10 +12,11 @@ from django.urls import reverse_lazy
 from django.views.decorators.http import require_POST
 from django.views.generic import CreateView
 from django.db.models import Count, Q, Sum
-from udltimes.models import StatsWordle, StatsFramed, StatsConnections, Connections
+from udltimes.models import StatsWordle, StatsFramed, StatsConnections, Connections, FramedConceptImage, Framed, FramedConcept
 from django.conf import settings
 from django.utils import timezone
-
+from django.http import JsonResponse
+import json
 
 def wordle_view(request):
     return render(request, 'wordle/wordle.html')
@@ -68,6 +69,82 @@ def connections_save_view(request):
 def framed_view(request):
     return render(request, 'framed.html')
 
+def framed_autocomplete(request): 
+    query = request.GET.get('term', '').lower()
+    results = []
+
+    if query:
+
+        results = list(
+            FramedConcept.objects
+            .filter(concept__icontains=query)
+            .values_list('concept', flat=True)[:10]
+        )
+        
+    return JsonResponse(results, safe=False)
+
+def framed_api(request):
+    
+    if not request.user.is_authenticated:
+        return JsonResponse({'error': 'You must log in'}, status=403)
+
+    today = timezone.now().date()
+
+    try:
+        game = Framed.objects.select_related('concept').get(date=today)
+    except:
+        return JsonResponse({'ERROR': 'No game today :p'})
+    
+    already_played = StatsFramed.objects.filter(user=request.user, game=game).exists()
+    if already_played:
+        return JsonResponse({
+            'already_played': True,
+            'concept': game.concept.concept # Opcional: mostrar la solución
+        })
+    
+    images = list(
+        game.concept.images.all().values_list('image_url', flat=True)
+    )
+
+    return JsonResponse({
+        'already_played': False,
+        'concept' : game.concept.concept,
+        'images' : images
+    })
+
+def framed_save_api(request):
+    if not request.user.is_authenticated:
+        return JsonResponse({"error": "Not authenticated"}, status=403)
+    if request.method != 'POST':
+        return JsonResponse({"error": "Method not allowed"}, status=405)
+
+    today = timezone.localdate()
+
+    try:
+        data = json.loads(request.body)
+    except (json.JSONDecodeError, ValueError):
+        return JsonResponse({"error": "Invalid JSON"}, status=400)
+
+    try:
+        game = Framed.objects.get(date=today)
+    except Framed.DoesNotExist:
+        return JsonResponse({'error': 'No game today'}, status=404)
+
+    score = data.get('score', 0)
+    frames_seen = data.get('frames_seen', 1)
+    guessed = data.get('guessed', False)
+
+    StatsFramed.objects.update_or_create(
+        user=request.user,
+        game=game,
+        defaults={
+            'points': score,
+            'images_needed': frames_seen,
+            'guessed': guessed,
+        }
+    )
+
+    return JsonResponse({"status": "saved", "score": score})
 
 def home(request):
     ee_user = getattr(settings, 'EE_USER', '')
@@ -98,12 +175,13 @@ def home(request):
 
     framed_leaderboard = (
         StatsFramed.objects
+        .filter(guessed=True)
         .values('user__username')
-        .annotate(streaks=Count('id'))
-        .order_by('-streaks')[:3]
+        .annotate(total_points=Sum('points'))
+        .order_by('-total_points')[:3]
     )
     framed_leaderboard = [
-        {'username': e['user__username'], 'streaks': e['streaks']}
+        {'username': e['user__username'], 'total_points': e['total_points']}
         for e in framed_leaderboard
     ]
 
@@ -272,3 +350,4 @@ class SignUpView(CreateView):
     form_class = UserCreationForm
     template_name = 'registration/signup.html'
     success_url = reverse_lazy('login')
+

@@ -46,31 +46,44 @@ class StatsConnections(models.Model):
 
 # Framed
 
-class Framed(models.Model):
-    date = models.DateField(primary_key=True)
-    paraula = models.CharField(max_length=100)
+class FramedConcept(models.Model):
+    concept = models.CharField(max_length=200, unique=True)
+    description = models.CharField(blank=True)
 
     def __str__(self):
-        return f"{self.date} - {self.paraula}"
-
-class FramedGameData(models.Model):
-    game = models.ForeignKey(Framed, on_delete=models.CASCADE)
-    order = models.IntegerField()
-    image = models.CharField(max_length=1000)
+        return self.concept
+    
+class FramedConceptImage(models.Model):
+    concept = models.ForeignKey(FramedConcept, on_delete=models.CASCADE, related_name='images')
+    image_url = models.URLField(max_length=500)
+    order =  models.PositiveBigIntegerField()
 
     class Meta:
-        constraints = [models.UniqueConstraint(fields=["game", "order"], name="unique_game_order_framedgamedata")]
+        ordering = ['order'] # 1->4 : dificil -> facil
+        unique_together = ('concept', 'order')
 
     def __str__(self):
-        return f"{self.game} - Image {self.order}"
+        return f"{self.concept.concept} - imagen {self.order}"
+
+
+class Framed(models.Model): #Juego del dia
+    date = models.DateField(primary_key=True)
+    concept = models.ForeignKey(FramedConcept, on_delete= models.CASCADE, related_name='games', blank=True)
+
+    def __str__(self):
+        return f"{self.date} - {self.concept.concept}"
+
+
 
 class StatsFramed(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     game = models.ForeignKey(Framed, on_delete=models.CASCADE)
-    value = models.CharField(max_length=100)
+    images_needed = models.PositiveSmallIntegerField(null=True, blank=True)
+    guessed = models.BooleanField(default=False)
+    points = models.IntegerField(default=0)
 
     class Meta:
-        constraints = [models.UniqueConstraint(fields=["user", "game"], name="unique_user_game_statsframed")]
+        unique_together = ('user', 'game')
 
     def __str__(self):
         return f"{self.user} - {self.game}"

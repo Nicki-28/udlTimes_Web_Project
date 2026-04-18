@@ -7,7 +7,8 @@ from .models import (
     StatsWordle,
     Framed,
     StatsFramed,
-    FramedGameData,
+    FramedConcept,
+    FramedConceptImage,
     ConnectionsWord,
     StatsConnections,
     ConnectionsCategory,
@@ -17,7 +18,8 @@ from .models import (
 admin.site.register(Wordle)
 admin.site.register(StatsWordle)
 admin.site.register(Framed)
-admin.site.register(FramedGameData)
+admin.site.register(FramedConcept)
+admin.site.register(FramedConceptImage)
 admin.site.register(StatsFramed)
 admin.site.register(ConnectionsCategory)
 admin.site.register(ConnectionsWord)
