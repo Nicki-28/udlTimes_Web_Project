@@ -105,8 +105,14 @@ function submitAnswer() {
 
 
 function showSuccessState() {
+    const score = calculateScore();
+    sendScore(true);
     document.getElementById('input-section').classList.add('hidden');
     document.getElementById('success-section').classList.remove('hidden');
+    const scoreText = document.getElementById('score-text');
+    if (scoreText) {
+        scoreText.textContent = `Score: ${score}`;
+    }
 }
 
 function canAccess(index) {
@@ -174,6 +180,7 @@ function updateSkipButton() {
 }
 
 function showLossState() {
+    sendScore(false);
     document.getElementById('input-section').classList.add('hidden');
     document.getElementById('loss-section').classList.remove('hidden');
     document.getElementById('loss-concept').textContent = conceptName;
@@ -210,7 +217,38 @@ function updateProgressBar() {
     }
 }
 
+function calculateScore() {
+    const visitedCount = visited.filter(v => v).length;
+    return Math.max(40 - (visitedCount - 1) * 10, 0);
+}
 
+function getCSRFToken() {
+    return document.cookie
+        .split('; ')
+        .find(row => row.startsWith('csrftoken'))
+        ?.split('=')[1];
+}
+
+function sendScore(guessed) {
+    const score = guessed ? calculateScore() : 0;
+    const framesSeen = visited.filter(v => v).length;
+
+    fetch('/api/framed/save/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCSRFToken()
+        },
+        body: JSON.stringify({
+            score: score,
+            frames_seen: framesSeen,
+            guessed: guessed,
+        })
+    })
+    .then(res => res.json())
+    .then(data => console.log("Score saved:", data))
+    .catch(err => console.error("Error saving score:", err));
+}
 
 document.addEventListener('DOMContentLoaded', loadGame);
 
