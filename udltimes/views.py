@@ -23,7 +23,35 @@ def wordle_view(request):
 
 @login_required
 def connections_view(request):
-    return render(request, 'connections/connections.html')
+    today = timezone.now().date()
+    # puzzle_hoy = Connections.objects.filter(date=today).first() esto lo usaremos mas adelante cuando añadamos todos los puzzles a la bbdd
+    puzzle_hoy = Connections.objects.last()
+    
+    stats = None
+    if puzzle_hoy:
+        stats = StatsConnections.objects.filter(user=request.user, game=puzzle_hoy).first()
+
+    soluciones_python = []
+    colores = ["#e9c46a", "#f4a261", "#e76f51", "#c1440e"]
+
+    if puzzle_hoy:
+        for i, categoria in enumerate(puzzle_hoy.categories.all()[:4]): 
+            palabras_obj = categoria.connectionsword_set.all()
+            lista_palabras = [p.word for p in palabras_obj]
+            soluciones_python.append({
+                "titulo": categoria.name, 
+                "palabras": lista_palabras,
+                "color": colores[i % 4]
+            })
+
+    soluciones_json = json.dumps(soluciones_python)
+
+    return render(request, 'connections/connections.html', {
+        'soluciones_json': soluciones_json,
+        'ha_jugado': stats is not None if stats else False,
+        'puntos_obtenidos': stats.points if stats else 0,
+        'hay_puzzle': puzzle_hoy is not None
+    })
 
 
 @require_POST
@@ -44,7 +72,8 @@ def connections_save_view(request):
         today = timezone.now().date()
 
         # buscamos el puzzle de hoy
-        game = Connections.objects.filter(date=today).first()
+        # game = Connections.objects.filter(date=today).first()
+        game = Connections.objects.last()
         if not game:
             return JsonResponse({"error": "No puzzle today"}, status=404)
 
