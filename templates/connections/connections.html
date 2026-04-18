@@ -149,6 +149,29 @@
   {# ── Overlay de inicio ── #}
   <div id="intro-overlay" class="fixed inset-0 z-50 flex items-center justify-center" style="background: rgba(248,250,252,0.97)">
     <div class="flex flex-col items-center gap-6 text-center px-8">
+      {% if ha_jugado %}
+
+        <h1 class="font-display text-4xl text-primary tracking-tight">PUZZLE COMPLETED</h1>
+        <p class="text-slate-500 text-sm font-medium">You have already played today's puzzle.</p>
+        <div class="bg-primary/10 p-4 rounded-xl mt-4">
+            <span class="text-xs font-bold text-primary uppercase tracking-widest">Your Score</span>
+            <div class="text-3xl font-display text-primary">{{ puntos_obtenidos }} pts</div>
+        </div>
+        <a href="{% url 'home' %}" class="mt-6 px-12 py-4 rounded-full border-2 border-primary text-primary font-bold text-sm hover:bg-primary hover:text-white transition-colors">
+          BACK TO HUB
+        </a>
+        <button onclick="verSolucion()" class="px-8 py-3 rounded-full border-2 border-primary text-primary font-bold text-sm hover:bg-primary hover:text-white transition-colors">
+            VIEW SOLUTION
+        </button>
+
+      {% elif not hay_puzzle %}
+        <h1 class="font-display text-4xl text-primary tracking-tight">STILL BREWING...</h1>
+        <p class="text-slate-500 text-sm font-medium">Today's puzzle is not ready yet. Please check back later!</p>
+        <a href="{% url 'home' %}" class="mt-6 px-12 py-4 rounded-full border-2 border-primary text-primary font-bold text-sm hover:bg-primary hover:text-white transition-colors">
+          BACK TO HUB
+        </a>
+
+      {% else %}
       <div class="flex flex-col gap-1.5 mb-2">
         <div class="flex gap-1.5">
           <div class="w-10 h-5 rounded" style="background:#e9c46a"></div>
@@ -164,6 +187,7 @@
       <button onclick="startGame()" class="mt-2 px-12 py-4 rounded-full bg-primary text-white font-bold text-sm hover:bg-primary-dark transition-colors shadow-lg shadow-primary/20">
         PLAY
       </button>
+    {% endif %}
     </div>
   </div>
 
@@ -204,13 +228,10 @@
 {% block extra_scripts %}
   <script>
     // soluciones secretas (mas adelante django lo pillara de la BBDD)
-    // const soluciones = {{ soluciones_json|safe }};
-    const soluciones = [
-      { titulo: "CAMPUS BUILDINGS", palabras: ["RECTORAT","CAPPONT","ETSEA","SALUT"], color: "#e9c46a" },
-      { titulo: "UdL DEGREES", palabras: ["DRET","MEDICINA","INFORMATICA","FILOLOGIA"], color: "#f4a261" },
-      { titulo: "EXAM SYNONYMS", palabras: ["EXAM","QUIZ","TEST","FINALS"], color: "#e76f51" },
-      { titulo: "HANG OUT SPOTS", palabras: ["CAFE","SEU","PARTY","PLACA"], color: "#c1440e" }
-    ];
+    const soluciones = {{ soluciones_json|safe }};
+
+    // vemos si este usuario ya ha jugado hoy
+    const yaJugado = {{ ha_jugado|yesno:"true,false" }};
 
     // estado del juego
     let categoriasAcertadas = [];
@@ -232,6 +253,13 @@
     }
 
     function startGame() {
+      const overlay = document.getElementById("intro-overlay");
+      overlay.style.transition = "opacity 0.4s ease";
+      overlay.style.opacity = "0";
+      setTimeout(() => overlay.remove(), 400);
+    }
+
+    function verSolucion() {
       const overlay = document.getElementById("intro-overlay");
       overlay.style.transition = "opacity 0.4s ease";
       overlay.style.opacity = "0";
@@ -485,6 +513,18 @@
       }
     }
 
-    dibujarJuego();
+    
+    if (yaJugado) {
+      // si ya ha jugado, vaciamos las palabras grises
+      palabrasActivas = [];
+      // pintamos directamente las 4 categorías como resueltas
+      soluciones.forEach(cat => anadirCategoriaResuelta(cat));
+      // ccultamos los botones de Shuffle, Submit y las Vidas
+      const controlesJuego = document.querySelector(".flex.flex-col.items-center.gap-6.mt-4");
+      if (controlesJuego) controlesJuego.style.display = "none";
+    } else {
+      // si es una partida nueva, dibujamos el tablero normal
+      dibujarJuego();
+    }
   </script>
 {% endblock %}
