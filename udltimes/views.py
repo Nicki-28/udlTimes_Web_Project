@@ -41,18 +41,29 @@ def framed_autocomplete(request):
 
 def framed_api(request):
     
-    today = timezone.localdate()
+    if not request.user.is_authenticated:
+        return JsonResponse({'error': 'You must log in'}, status=403)
+
+    today = timezone.now().date()
 
     try:
         game = Framed.objects.select_related('concept').get(date=today)
     except:
         return JsonResponse({'ERROR': 'No game today :p'})
     
+    already_played = StatsFramed.objects.filter(user=request.user, game=game).exists()
+    if already_played:
+        return JsonResponse({
+            'already_played': True,
+            'concept': game.concept.concept # Opcional: mostrar la solución
+        })
+    
     images = list(
         game.concept.images.all().values_list('image_url', flat=True)
     )
 
     return JsonResponse({
+        'already_played': False,
         'concept' : game.concept.concept,
         'images' : images
     })

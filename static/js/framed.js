@@ -19,6 +19,12 @@ async function loadGame() {
             return;
         }
         const data = await res.json();
+
+        if (data.already_played) {
+            showAlreadyPlayed(data.concept);
+            return;
+        }
+
         images = data.images;
         conceptName = data.concept;
         initVisited();
@@ -26,6 +32,18 @@ async function loadGame() {
     } catch (e) {
         console.error('Error loading the game:', e);
     }
+}
+
+function showAlreadyPlayed(concept) {
+    document.getElementById('input-section').classList.add('hidden');
+    document.getElementById('img-container').innerHTML = `
+        <div class="flex flex-col items-center justify-center h-full p-6 text-center bg-slate-100 dark:bg-slate-800">
+            <span class="material-symbols-outlined text-6xl text-secondary mb-4">history</span>
+            <h2 class="text-2xl font-display mb-2">¡YOU ALREADY PLAYED!</h2>
+            <p class="text-slate-500">Come back tomorrow for a new challenge</p>
+            <p class="mt-4 font-bold">Today's solution was: <span class="text-primary">${concept}</span></p>
+        </div>
+    `;
 }
 
 //autocomplete (pendent fix)
