@@ -18,7 +18,7 @@ from django.utils import timezone
 
 
 def wordle_view(request):
-    return render(request, 'wordle.html')
+    return render(request, 'wordle/wordle.html')
 
 @login_required
 def connections_view(request):
