@@ -130,3 +130,5 @@ STATIC_URL = '/static/'
 STATICFILES_DIRS = [
     BASE_DIR / "static",
 ]
+STATIC_URL = 'static/'
+STATICFILES_DIRS = [BASE_DIR / "static"] # O la ruta a tu carpeta static

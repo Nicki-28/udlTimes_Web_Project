@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 
+{% load static %}
 {% block title %}Wordle | UdL-Times{% endblock %}
 
 {% block extra_head %}
@@ -16,7 +17,6 @@
     .border-key-present { border-color: #C9B458; }
     .border-key-absent { border-color: #787C7E; }
 
-    /* Animaciones */
     @keyframes flip {
         0% { transform: rotateX(0); }
         50% { transform: rotateX(90deg); opacity: 0.8; }
@@ -96,6 +96,12 @@
             </div>
         </div>
     </div>
+
+    <video id="video-david" muted preload="auto" playsinline style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; object-fit: contain; opacity: 0.85; z-index: 9999;">
+    <source src="{% static 'video/sarrat.webm' %}" type="video/webm">
+    <source src="{% static 'video/sarrat.mp4' %}" type="video/mp4">
+    </video>
+
 </div>
 {% endblock %}
 
@@ -464,5 +470,57 @@
         }
     })
     .catch(error => console.error("Error de conexión:", error));
+
+    // --- LÓGICA DEL VÍDEO DAVID (EASTER EGG) ---
+    let bufferDavid = "";
+    const palabraSecreta = "david";
+    const videoSecreto = document.getElementById('video-david');
+
+    window.addEventListener('keydown', (e) => {
+        if(e.key.length === 1) {
+            bufferDavid += e.key.toLowerCase();
+
+            if (bufferDavid.length > palabraSecreta.length) {
+                bufferDavid = bufferDavid.substring(bufferDavid.length - palabraSecreta.length);
+            }
+
+            if (bufferDavid === palabraSecreta) {
+                videoSecreto.style.display = 'block';
+                const playPromise = videoSecreto.play();
+                if (playPromise !== undefined) {
+                    playPromise.catch((err) => {
+                        console.warn('Reproducción automática bloqueada:', err);
+                        showPlayOverlay();
+                    });
+                }
+                bufferDavid = "";
+            }
+        }
+    });
+
+    function showPlayOverlay() {
+        if (document.getElementById('video-play-overlay')) return;
+        const overlay = document.createElement('div');
+        overlay.id = 'video-play-overlay';
+        overlay.style = 'position: fixed; inset: 0; display:flex; align-items:center; justify-content:center; z-index:10000; background: rgba(0,0,0,0.4);';
+        overlay.innerHTML = `<button id="video-play-btn" style="padding:12px 20px; font-size:16px; border-radius:10px; background:#700040; color:#fff; border:none; cursor:pointer;">Reproducir vídeo</button>`;
+        overlay.addEventListener('click', (e) => {
+            if (e.target.id !== 'video-play-btn') return;
+            const btn = document.getElementById('video-play-btn');
+            btn.disabled = true;
+            videoSecreto.play().then(() => {
+                overlay.remove();
+            }).catch(err => {
+                console.error('No se pudo reproducir el vídeo después de interacción:', err);
+                btn.disabled = false;
+            });
+        });
+        document.body.appendChild(overlay);
+    }
+
+    videoSecreto.onended = () => {
+        videoSecreto.style.display = 'none';
+    };
+
 </script>
 {% endblock %}
