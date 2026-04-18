@@ -204,6 +204,7 @@
 {% block extra_scripts %}
   <script>
     // soluciones secretas (mas adelante django lo pillara de la BBDD)
+    // const soluciones = {{ soluciones_json|safe }};
     const soluciones = [
       { titulo: "CAMPUS BUILDINGS", palabras: ["RECTORAT","CAPPONT","ETSEA","SALUT"], color: "#e9c46a" },
       { titulo: "UdL DEGREES", palabras: ["DRET","MEDICINA","INFORMATICA","FILOLOGIA"], color: "#f4a261" },
