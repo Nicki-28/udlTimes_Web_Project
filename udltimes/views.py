@@ -1,3 +1,4 @@
+import json
 import re
 
 from django.contrib.auth.decorators import login_required
@@ -5,20 +6,64 @@ from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from django.contrib.auth import login, update_session_auth_hash
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.models import User
+from django.http import JsonResponse
 from django.shortcuts import render, redirect
 from django.urls import reverse_lazy
+from django.views.decorators.http import require_POST
 from django.views.generic import CreateView
-from django.db.models import Count, Q
-from udltimes.models import StatsWordle, StatsFramed, StatsConnections
+from django.db.models import Count, Q, Sum
+from udltimes.models import StatsWordle, StatsFramed, StatsConnections, Connections
 from django.conf import settings
+from django.utils import timezone
 
 
 def wordle_view(request):
     return render(request, 'wordle.html')
 
+@login_required
 def connections_view(request):
     return render(request, 'connections/connections.html')
 
+
+@require_POST
+def connections_save_view(request):
+    if not request.user.is_authenticated:
+        return JsonResponse({"error": "Not authenticated"}, status=401)
+
+    try:
+        data = json.loads(request.body)
+
+        # le pedimos al Frontend que nos envíe directamente las vidas restantes (1, 2, 3 o 4)
+        vidas_restantes = data.get("vidas", 0)
+        completed = data.get("completed", False)
+
+        # puntuacion simple: si ganó, multiplica vidas por 100. Si perdió o hizo trampas con vidas < 0, 0 puntos.
+        points = (vidas_restantes * 100) if completed and vidas_restantes > 0 else 0
+
+        today = timezone.now().date()
+
+        # buscamos el puzzle de hoy
+        game = Connections.objects.filter(date=today).first()
+        if not game:
+            return JsonResponse({"error": "No puzzle today"}, status=404)
+
+        # guardamos la estadística
+        stat, created = StatsConnections.objects.get_or_create(
+            user=request.user,
+            game=game,
+            defaults={"completed": completed, "points": points}
+        )
+
+        # si ya había jugado (quizás la refrescó sin querer) y ahora tiene más puntos (o la primera no la guardó como completa), la actualizamos
+        if not created and stat.points < points:
+            stat.completed = completed
+            stat.points = points
+            stat.save()
+
+        return JsonResponse({"points": points, "success": True})
+
+    except Exception as e:
+        return JsonResponse({"error": str(e)}, status=400)
 
 def framed_view(request):
     return render(request, 'framed.html')
@@ -43,7 +88,7 @@ def home(request):
         StatsConnections.objects
         .filter(completed=True)
         .values('user__username')
-        .annotate(points=Count('id'))
+        .annotate(points=Sum('points'))
         .order_by('-points')[:3]
     )
     connections_leaderboard = [
