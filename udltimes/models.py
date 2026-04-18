@@ -79,7 +79,7 @@ class StatsFramed(models.Model):
     game = models.ForeignKey(Framed, on_delete=models.CASCADE)
     images_needed = models.PositiveSmallIntegerField(null=True, blank=True)
     guessed = models.BooleanField(default=False)
-    #value = models.CharField(max_length=100)
+    points = models.IntegerField(default=0)
 
     class Meta:
         unique_together = ('user', 'game')
