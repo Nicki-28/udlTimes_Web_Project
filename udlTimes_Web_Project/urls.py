@@ -17,13 +17,36 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 
-from udltimes.views import SignUpView, home, wordle_view, connections_view, framed_view, register_view, login_view, profile_view
+from udltimes.views import (
+    SignUpView,
+    connections_check_api,
+    connections_complete_api,
+    connections_today_api,
+    connections_view,
+    framed_check_api,
+    framed_today_api,
+    framed_view,
+    home,
+    login_view,
+    profile_view,
+    register_view,
+    wordle_check_api,
+    wordle_today_api,
+    wordle_view,
+)
 from django.contrib.auth.views import LogoutView
 
 urlpatterns = [
     path('wordle/', wordle_view, name='wordle'),
     path('connections/', connections_view, name='connections'),
     path('framed/', framed_view, name='framed'),
+    path('api/wordle/today/', wordle_today_api, name='api_wordle_today'),
+    path('api/wordle/check/', wordle_check_api, name='api_wordle_check'),
+    path('api/connections/today/', connections_today_api, name='api_connections_today'),
+    path('api/connections/check/', connections_check_api, name='api_connections_check'),
+    path('api/connections/complete/', connections_complete_api, name='api_connections_complete'),
+    path('api/framed/today/', framed_today_api, name='api_framed_today'),
+    path('api/framed/check/', framed_check_api, name='api_framed_check'),
     path('', home, name='home'),
     path('admin/', admin.site.urls),
     path('accounts/signup/', SignUpView.as_view(), name='signup'),
