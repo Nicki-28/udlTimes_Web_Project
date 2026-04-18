@@ -19,9 +19,11 @@ from django.urls import path, include
 
 from udltimes.views import SignUpView, home, wordle_view, connections_view, framed_view, register_view, login_view, profile_view
 from django.contrib.auth.views import LogoutView
+from udltimes.games.wordle.views import check_guess,dailyWordle
 
 urlpatterns = [
     path('wordle/', wordle_view, name='wordle'),
+    path('wordle/check-guess/', check_guess, name='check_guess'),
     path('connections/', connections_view, name='connections'),
     path('framed/', framed_view, name='framed'),
     path('', home, name='home'),
@@ -31,4 +33,5 @@ urlpatterns = [
     path("accounts/register/", register_view, name="register"),
     path('accounts/logout/', LogoutView.as_view(next_page='home'), name='logout'),
     path('profile/', profile_view, name='profile'),
+    path('wordle/daily/', dailyWordle, name='dailyWordle'),
 ]
