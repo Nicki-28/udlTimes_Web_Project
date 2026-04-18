@@ -35,6 +35,7 @@ class StatsConnections(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     game = models.ForeignKey(Connections, on_delete=models.CASCADE)
     completed = models.BooleanField(default=False)
+    points = models.IntegerField(default=0)
 
     class Meta:
         unique_together = ("user", "game")
