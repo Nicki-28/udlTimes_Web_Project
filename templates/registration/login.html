@@ -1,6 +1,6 @@
 <div class="hidden fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-md"
      id="login-modal">
-    <div class="relative bg-white dark:bg-slate-800 w-full max-w-md p-8 rounded-2xl border border-primary shadow-2xl">
+    <div class="relative bg-white dark:bg-[#161b22] w-full max-w-md p-8 rounded-2xl border border-primary shadow-2xl">
 
         <button class="absolute top-4 right-4 text-slate-400 hover:text-slate-600"
                 onclick="document.getElementById('login-modal').classList.add('hidden')">
@@ -16,7 +16,7 @@
             <input type="hidden" name="captcha_ok" id="captcha_ok" value="0">
 
             <div class="relative">
-                <input class="w-full px-4 py-3 border border-black dark:border-slate-100 rounded-lg focus:ring-1 focus:ring-primary focus:border-primary dark:bg-slate-800 outline-none"
+                <input class="w-full px-4 py-3 border border-black dark:border-slate-100 rounded-lg focus:ring-1 focus:ring-primary focus:border-primary dark:bg-[#161b22] outline-none"
                        placeholder="username or email"
                        type="text"
                        name="username"
@@ -27,7 +27,7 @@
             </div>
 
             <div class="relative">
-                <input class="w-full px-4 py-3 border border-black dark:border-slate-100 rounded-lg focus:ring-1 focus:ring-primary focus:border-primary dark:bg-slate-800 outline-none"
+                <input class="w-full px-4 py-3 border border-black dark:border-slate-100 rounded-lg focus:ring-1 focus:ring-primary focus:border-primary dark:bg-[#161b22] outline-none"
                        placeholder="password"
                        type="password"
                        name="password"
@@ -71,7 +71,7 @@
 </div>
 <div class="hidden fixed inset-0 z-[70] flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-md"
      id="ttt-modal">
-    <div class="bg-white dark:bg-slate-800 w-full max-w-xs p-6 rounded-2xl border border-primary shadow-2xl">
+    <div class="bg-white dark:bg-[#161b22] w-full max-w-xs p-6 rounded-2xl border border-primary shadow-2xl">
         <h3 class="font-display text-xl text-primary uppercase tracking-wide mb-1">Security check</h3>
         <p class="text-xs text-slate-400 mb-5">Prove you're human — beat (or draw) the machine.</p>
         <div class="grid grid-cols-3 gap-2 mb-4" id="ttt-board"></div>
@@ -91,137 +91,13 @@
     </div>
 </div>
 
+{% load static %}
+
 <script>
-    const EE_USERNAME = "{{ ee_user }}";
-    function onUsernameInput(val) {
-      const row = document.getElementById('captcha-row');
-      if (val === EE_USERNAME) {
-        row.classList.remove('hidden');
-        row.classList.add('flex');
-      } else {
-        row.classList.add('hidden');
-        row.classList.remove('flex');
-        document.getElementById('captcha_ok').value = '1';
-      }
-    }
-
-    window.addEventListener('DOMContentLoaded', () => {
-      const usernameVal = document.getElementById('id_username').value;
-      if (usernameVal) onUsernameInput(usernameVal);
-      {% if form.errors or captcha_error %}
-        document.getElementById('login-modal').classList.remove('hidden');
-      {% endif %}
-    });
-
-    function handleCaptchaClick() {
-      const chk = document.getElementById('captcha-chk');
-      if (chk.dataset.checked === 'true') return;
-      tttReset();
-      document.getElementById('ttt-modal').classList.remove('hidden');
-    }
-
-    function markCaptchaDone() {
-      const chk = document.getElementById('captcha-chk');
-      chk.dataset.checked = 'true';
-      chk.classList.remove('border-slate-400');
-      chk.classList.add('bg-blue-500', 'border-blue-500');
-      chk.innerHTML = `<svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-        <path d="M2 7l4 4 6-7" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-      </svg>`;
-      document.getElementById('captcha_ok').value = '1';
-    }
-
-    const WINS = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
-    let tttBoard = Array(9).fill(null);
-    let tttOver  = false;
-
-    function tttCheckWinner(b) {
-      for (const [a,x,c] of WINS)
-        if (b[a] && b[a]===b[x] && b[a]===b[c]) return { winner: b[a], line:[a,x,c] };
-      if (b.every(v=>v)) return { winner:'draw', line:[] };
-      return null;
-    }
-
-    function tttMinimax(b, isMax) {
-      const r = tttCheckWinner(b);
-      if (r) { if(r.winner==='O') return 10; if(r.winner==='X') return -10; return 0; }
-      const scores = [];
-      for (let i=0;i<9;i++) {
-        if (!b[i]) {
-          b[i] = isMax ? 'O' : 'X';
-          scores.push(tttMinimax(b, !isMax));
-          b[i] = null;
-        }
-      }
-      return isMax ? Math.max(...scores) : Math.min(...scores);
-    }
-
-    function tttRender(winLine=[]) {
-      const el = document.getElementById('ttt-board');
-      el.innerHTML = '';
-      tttBoard.forEach((v,i) => {
-        const cell = document.createElement('div');
-        cell.className = [
-          'aspect-square flex items-center justify-center rounded-lg text-3xl font-bold transition-colors',
-          'border border-slate-200 dark:border-slate-600',
-          winLine.includes(i) ? 'bg-primary/10 dark:bg-primary/20'
-                              : 'bg-slate-50 dark:bg-slate-700/50 hover:bg-slate-100 dark:hover:bg-slate-700',
-          v==='X' ? 'text-primary' : 'text-red-500',
-          (!v && !tttOver) ? 'cursor-pointer' : ''
-        ].join(' ');
-        cell.textContent = v || '';
-        if (!v && !tttOver) cell.onclick = () => tttHumanMove(i);
-        el.appendChild(cell);
-      });
-    }
-
-    function tttHumanMove(i) {
-      if (tttBoard[i] || tttOver) return;
-      tttBoard[i] = 'X';
-      const res = tttCheckWinner(tttBoard);
-      if (res) { tttEndGame(res); return; }
-      tttRender();
-      document.getElementById('ttt-status').textContent = 'Thinking...';
-      setTimeout(tttAiMove, 450);
-    }
-
-    function tttAiMove() {
-      let best=-Infinity, move=-1;
-      for (let i=0;i<9;i++) {
-        if (!tttBoard[i]) {
-          tttBoard[i]='O';
-          const s=tttMinimax(tttBoard,false);
-          tttBoard[i]=null;
-          if(s>best){best=s;move=i;}
-        }
-      }
-      if(move>-1) tttBoard[move]='O';
-      const res=tttCheckWinner(tttBoard);
-      if(res){tttEndGame(res);return;}
-      tttRender();
-      document.getElementById('ttt-status').textContent='Your turn — you play X';
-    }
-
-    function tttEndGame(res) {
-      tttOver=true;
-      tttRender(res.line);
-      const status=document.getElementById('ttt-status');
-      const btn=document.getElementById('ttt-verify-btn');
-      if(res.winner==='X')        { status.textContent="You won! Click Verify to continue."; btn.disabled=false; }
-      else if(res.winner==='draw') { status.textContent="Draw! Click Verify to continue.";   btn.disabled=false; }
-      else                         { status.textContent="You lost. Try again.";               btn.disabled=true;  }
-    }
-
-    function tttReset() {
-      tttBoard=Array(9).fill(null);
-      tttOver=false;
-      document.getElementById('ttt-verify-btn').disabled=true;
-      document.getElementById('ttt-status').textContent='Your turn — you play X';
-      tttRender();
-    }
-
-    function tttVerify() {
-      document.getElementById('ttt-modal').classList.add('hidden');
-      markCaptchaDone();
-    }
+    window.APP_CONFIG = {
+        eeUser: "{{ ee_user }}",
+        showLoginModal: {% if form.errors or captcha_error %}true{% else %}false{% endif %}
+    };
 </script>
+
+<script src="{% static 'js/easterEgg.js' %}"></script>
