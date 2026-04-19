@@ -18,6 +18,7 @@ from django.utils import timezone
 from django.http import JsonResponse
 import json
 
+@login_required
 def wordle_view(request):
     return render(request, 'wordle/wordle.html')
 
@@ -95,6 +96,7 @@ def connections_save_view(request):
     except Exception as e:
         return JsonResponse({"error": str(e)}, status=400)
 
+@login_required
 def framed_view(request):
     return render(request, 'framed.html')
 
@@ -219,7 +221,13 @@ def home(request):
         'wordle_leaderboard': wordle_leaderboard,
         'connections_leaderboard': connections_leaderboard,
         'framed_leaderboard': framed_leaderboard,
+        'form': AuthenticationForm(),
     }
+
+    if request.GET.get('next'):
+        context['show_login_modal'] = True
+        context['login_error'] = "¡Debes iniciar sesión o registrarte para poder jugar!"
+
     return render(request, 'home.html', context)
 
 
