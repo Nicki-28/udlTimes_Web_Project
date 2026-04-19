@@ -93,11 +93,4 @@
 
 {% load static %}
 
-<script>
-    window.APP_CONFIG = {
-        eeUser: "{{ ee_user }}",
-        showLoginModal: {% if form.errors or captcha_error %}true{% else %}false{% endif %}
-    };
-</script>
-
 <script src="{% static 'js/easterEgg.js' %}"></script>
