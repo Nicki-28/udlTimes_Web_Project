@@ -14,15 +14,17 @@
             {% csrf_token %}
             <div class="relative">
                 <input class="w-full px-4 py-3 border border-black dark:border-slate-100 rounded-lg focus:ring-1 focus:ring-primary focus:border-primary dark:bg-[#161b22] outline-none"
-                       placeholder="full name" type="text" name="full_name"/>
+                       placeholder="full name" type="text" name="full_name"
+                       value="{{ register_full_name|default:'' }}"/>
             </div>
             <div class="relative">
                 <input class="w-full px-4 py-3 border border-black dark:border-slate-100 rounded-lg focus:ring-1 focus:ring-primary focus:border-primary dark:bg-[#161b22] outline-none"
-                       placeholder="university email" type="email" name="email"/>
+                       placeholder="university email" type="email" name="email"
+                       value="{{ register_email|default:'' }}"/>
             </div>
             <div class="relative">
                 <input class="w-full px-4 py-3 border border-black dark:border-slate-100 rounded-lg focus:ring-1 focus:ring-primary focus:border-primary dark:bg-[#161b22] outline-none"
-                       placeholder="username" type="text" name="username"/>
+                       placeholder="username" type="text" name="username" value="{{ register_username|default:'' }}"/>
             </div>
             <div class="relative">
                 <input class="w-full px-4 py-3 border border-black dark:border-slate-100 rounded-lg focus:ring-1 focus:ring-primary focus:border-primary dark:bg-[#161b22] outline-none"

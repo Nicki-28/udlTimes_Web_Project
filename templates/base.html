@@ -14,6 +14,13 @@
 
     {% load static %}
     <link rel="stylesheet" href="{% static 'css/base.css' %}">
+    <script>
+        window.APP_CONFIG = {
+          eeUser: "{{ ee_user }}",
+          currentUser: "{{ request.user.username }}",
+          showLoginModal: {% if form.errors or captcha_error %}true{% else %}false{% endif %}
+        };
+    </script>
     <script src="{% static 'js/theme.js' %}"></script>
 
     {% block extra_head %}{% endblock %}
