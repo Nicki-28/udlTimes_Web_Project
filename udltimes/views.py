@@ -258,50 +258,31 @@ def login_view(request):
 
 def register_view(request):
     if request.method == "POST":
-        username = request.POST.get("username")
-        email = request.POST.get("email")
-        password = request.POST.get("password")
-        full_name = request.POST.get("full_name")
+        username = request.POST.get("username", "")
+        email = request.POST.get("email", "")
+        password = request.POST.get("password", "")
+        full_name = request.POST.get("full_name", "")
+
+        base_context = {
+            "register_username": username,
+            "register_email": email,
+            "register_full_name": full_name,
+            "show_register_modal": True,
+        }
+
+        def error(msg):
+            return render(request, "home.html", {**base_context, "register_error": msg})
 
         if not username or not password:
-            return render(request, "home.html", {
-                "register_error": "Username and password are required.",
-                "register_username": username,
-                "register_email": email,
-                "show_register_modal": True
-            })
-
+            return error("Username and password are required.")
         if User.objects.filter(username=username).exists():
-            return render(request, "home.html", {
-                "register_error": "Username already exists.",
-                "register_username": username,
-                "register_email": email,
-                "show_register_modal": True
-            })
-
+            return error("Username already exists.")
         if len(password) < 8:
-            return render(request, "home.html", {
-                "register_error": "Password must be at least 8 characters.",
-                "register_username": username,
-                "register_email": email,
-                "show_register_modal": True
-            })
-
+            return error("Password must be at least 8 characters.")
         if not re.search(r"\d", password):
-            return render(request, "home.html", {
-                "register_error": "Password must contain at least one number.",
-                "register_username": username,
-                "register_email": email,
-                "show_register_modal": True
-            })
-
+            return error("Password must contain at least one number.")
         if not re.search(r"[A-Za-z]", password):
-            return render(request, "home.html", {
-                "register_error": "Password must contain at least one letter.",
-                "register_username": username,
-                "register_email": email,
-                "show_register_modal": True
-            })
+            return error("Password must contain at least one letter.")
 
         user = User.objects.create_user(
             username=username,
