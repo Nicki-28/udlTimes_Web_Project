@@ -15,11 +15,11 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
-from django.urls import path, include
+from django.urls import path
 
 from udltimes.views import SignUpView, home, wordle_view, connections_view, framed_view, register_view, login_view, profile_view
 from django.contrib.auth.views import LogoutView
-from udltimes.games.wordle.views import check_guess,dailyWordle
+from templates.wordle.views import check_guess,dailyWordle
 
 urlpatterns = [
     path('wordle/', wordle_view, name='wordle'),
