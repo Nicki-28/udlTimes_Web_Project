@@ -20,7 +20,7 @@ import json
 
 @login_required
 def wordle_view(request):
-    return render(request, 'wordle/wordle.html')
+    return render(request, 'wordle/index.html')
 
 @login_required
 def connections_view(request):

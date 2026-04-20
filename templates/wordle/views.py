@@ -30,7 +30,7 @@ def check_guess(request):
             return JsonResponse({"status": "invalid_word", "mssg": "La palabra debe tener 5 letras"})
 
         # Validar que la palabra exista en el diccionario
-        diccionario_path = os.path.join(settings.BASE_DIR, 'udltimes', 'games', 'wordle', 'diccionario.txt')
+        diccionario_path = os.path.join(settings.BASE_DIR, 'templates', 'wordle', 'diccionario.txt')
         try:
             with open(diccionario_path, "r", encoding="utf-8") as f:
                 palabras_validas = {w.strip().upper() for w in f}
@@ -116,7 +116,7 @@ def dailyWordle(request):
         if wordle_obj:
             daily_word = wordle_obj.word
         else:
-            file_path = os.path.join(settings.BASE_DIR, 'udltimes', 'games', 'wordle', 'words.txt')
+            file_path = os.path.join(settings.BASE_DIR, 'templates', 'wordle', 'words.txt')
             try:
                 with open(file_path, "r", encoding="utf-8") as f:
                     words = f.read().splitlines()
