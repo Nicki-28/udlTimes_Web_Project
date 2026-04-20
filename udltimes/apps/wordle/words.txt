@@ -39,7 +39,6 @@ Robot
 Movil
 Chips
 Miret
-David
 Magda
 Josep
 Nacho
