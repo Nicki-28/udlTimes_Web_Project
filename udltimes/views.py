@@ -13,7 +13,7 @@ from django.conf import settings
 
 
 def wordle_view(request):
-    return render(request, 'wordle/wordle.html')
+    return render(request, 'wordle/index.html')
 
 
 def connections_view(request):
