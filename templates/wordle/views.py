@@ -8,6 +8,7 @@ from django.views.decorators.csrf import csrf_exempt, csrf_protect, ensure_csrf_
 from django.contrib.auth.models import User
 from django.shortcuts import render
 from udltimes.models import Wordle, StatsWordle
+from django.db.models import Sum
 
 @ensure_csrf_cookie
 def wordle_page(request):
