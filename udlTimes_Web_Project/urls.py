@@ -19,7 +19,7 @@ from django.urls import path
 
 from udltimes.views import SignUpView, home, wordle_view, connections_view, framed_view, register_view, login_view, profile_view, framed_autocomplete, framed_api, framed_save_api, connections_save_view
 from django.contrib.auth.views import LogoutView
-from templates.wordle.views import check_guess,dailyWordle
+from udltimes.wordle.views import check_guess,dailyWordle
 
 urlpatterns = [
     path('wordle/', wordle_view, name='wordle'),
