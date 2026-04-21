@@ -175,24 +175,26 @@
         return cookieValue;
     }
 
-    function guardarJugadaLocal(palabra, colores) { //local storage
-        const hoy = new Date().toDateString();
-        let estado = JSON.parse(localStorage.getItem('wordleEstado')) || { fecha: hoy, jugadas: [] };
+    const claveLocal = `wordleEstado_{{ request.user.username }}`;
 
-        // Si es la jugada de un día anterior, lo reseteamos
+    function guardarJugadaLocal(palabra, colores) {
+        const hoy = new Date().toDateString();
+        let estado = JSON.parse(localStorage.getItem(claveLocal)) || { fecha: hoy, jugadas: [] };
+
         if (estado.fecha !== hoy) {
             estado = { fecha: hoy, jugadas: [] };
         }
 
         estado.jugadas.push({ palabra: palabra, colores: colores });
-        localStorage.setItem('wordleEstado', JSON.stringify(estado));
+        localStorage.setItem(claveLocal, JSON.stringify(estado));
     }
 
     function cargarTableroLocal() {
         const hoy = new Date().toDateString();
-        const estado = JSON.parse(localStorage.getItem('wordleEstado'));
+        // Lee de la clave única del usuario
+        const estado = JSON.parse(localStorage.getItem(claveLocal));
 
-        if (estado && estado.fecha === hoy) { //si jugamos hoy guardamos la jugada
+        if (estado && estado.fecha === hoy && estado.jugadas.length > 0) {
             const coloresTailwind = {
                 'correct': 'bg-key-correct text-white border-key-correct',
                 'present': 'bg-key-present text-white border-key-present',
@@ -211,6 +213,8 @@
                     actualizarTeclado(letra, colorEstado);
                 }
             });
+
+            filaActual = estado.jugadas.length;
         }
     }
 
@@ -541,11 +545,12 @@
             console.log("El usuario debe iniciar sesión.");
         } else if (data.status === "200") {
             console.log("Palabra del día lista para jugar.");
+            // Cargamos el tablero si recarga a mitad de partida
+            cargarTableroLocal();
         } else if (data.status === "409") {
             juegoTerminado = true;
             animando = true;
 
-            //pintar tablero antes del pop up
             cargarTableroLocal();
 
             const stats = data.stats || { attempts: 0, score: 0, time: 0 };
