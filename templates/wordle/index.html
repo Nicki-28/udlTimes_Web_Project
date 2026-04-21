@@ -97,6 +97,13 @@
         </div>
     </div>
 
+    <div class="mt-14 text-center">
+      <a class="inline-flex items-center gap-2 text-slate-500 hover:text-primary transition-colors font-bold text-sm" href="/">
+        <span class="material-symbols-outlined text-base">arrow_back</span>
+        BACK TO GAMES HUB
+      </a>
+    </div>
+
     <video id="video-david"  preload="auto" playsinline style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; object-fit: cover; opacity: 0.90; z-index: 9999;">
         <source src="{% static 'video/sarrat.webm' %}" type="video/webm">
         <source src="{% static 'video/sarrat.mp4' %}" type="video/mp4">
@@ -166,6 +173,45 @@
             }
         }
         return cookieValue;
+    }
+
+    function guardarJugadaLocal(palabra, colores) { //local storage
+        const hoy = new Date().toDateString();
+        let estado = JSON.parse(localStorage.getItem('wordleEstado')) || { fecha: hoy, jugadas: [] };
+
+        // Si es la jugada de un día anterior, lo reseteamos
+        if (estado.fecha !== hoy) {
+            estado = { fecha: hoy, jugadas: [] };
+        }
+
+        estado.jugadas.push({ palabra: palabra, colores: colores });
+        localStorage.setItem('wordleEstado', JSON.stringify(estado));
+    }
+
+    function cargarTableroLocal() {
+        const hoy = new Date().toDateString();
+        const estado = JSON.parse(localStorage.getItem('wordleEstado'));
+
+        if (estado && estado.fecha === hoy) { //si jugamos hoy guardamos la jugada
+            const coloresTailwind = {
+                'correct': 'bg-key-correct text-white border-key-correct',
+                'present': 'bg-key-present text-white border-key-present',
+                'absent':  'bg-key-absent text-white border-key-absent'
+            };
+
+            estado.jugadas.forEach((jugada, indexFila) => {
+                for (let i = 0; i < 5; i++) {
+                    const casilla = document.getElementById(`box-${indexFila}${i}`);
+                    const letra = jugada.palabra[i];
+                    const colorEstado = jugada.colores[i];
+
+                    casilla.innerText = letra;
+                    casilla.className = `w-14 h-14 flex items-center justify-center text-2xl font-bold uppercase transition-all duration-500 ${coloresTailwind[colorEstado]}`;
+
+                    actualizarTeclado(letra, colorEstado);
+                }
+            });
+        }
     }
 
     // 1. GENERACIÓN DEL TABLERO
@@ -243,7 +289,7 @@
         }
     }
 
-    // --- EASTER EGG ---
+    // EASTER EGG
     const videoSecreto = document.getElementById('video-david');
 
     function activarEasterEgg() {
@@ -357,6 +403,8 @@
                         'present': 'bg-key-present text-white border-key-present',
                         'absent':  'bg-key-absent text-white border-key-absent'
                     };
+
+                    guardarJugadaLocal(intentoActual, data.colors);
 
                     const tiempoTotalAnimacion = 5 * 600 + 600;
 
@@ -496,6 +544,9 @@
         } else if (data.status === "409") {
             juegoTerminado = true;
             animando = true;
+
+            //pintar tablero antes del pop up
+            cargarTableroLocal();
 
             const stats = data.stats || { attempts: 0, score: 0, time: 0 };
             const tiempoFormateado = formatearTiempo(stats.time);
