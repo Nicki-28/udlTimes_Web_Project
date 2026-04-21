@@ -12,22 +12,23 @@ from django.urls import reverse_lazy
 from django.views.decorators.http import require_POST
 from django.views.generic import CreateView
 from django.db.models import Count, Q, Sum
-from udltimes.models import StatsWordle, StatsFramed, StatsConnections, Connections, FramedConceptImage, Framed, FramedConcept
+from udltimes.models import StatsWordle, StatsFramed, StatsConnections, Connections, FramedConceptImage, Framed, \
+    FramedConcept
 from django.conf import settings
 from django.utils import timezone
-from django.http import JsonResponse
-import json
+
 
 @login_required
 def wordle_view(request):
     return render(request, 'wordle/index.html')
+
 
 @login_required
 def connections_view(request):
     today = timezone.now().date()
     # puzzle_hoy = Connections.objects.filter(date=today).first() esto lo usaremos mas adelante cuando añadamos todos los puzzles a la bbdd
     puzzle_hoy = Connections.objects.last()
-    
+
     stats = None
     if puzzle_hoy:
         stats = StatsConnections.objects.filter(user=request.user, game=puzzle_hoy).first()
@@ -36,11 +37,11 @@ def connections_view(request):
     colores = ["#e9c46a", "#f4a261", "#e76f51", "#c1440e"]
 
     if puzzle_hoy:
-        for i, categoria in enumerate(puzzle_hoy.categories.all()[:4]): 
+        for i, categoria in enumerate(puzzle_hoy.categories.all()[:4]):
             palabras_obj = categoria.connectionsword_set.all()
             lista_palabras = [p.word for p in palabras_obj]
             soluciones_python.append({
-                "titulo": categoria.name, 
+                "titulo": categoria.name,
                 "palabras": lista_palabras,
                 "color": colores[i % 4]
             })
@@ -96,26 +97,27 @@ def connections_save_view(request):
     except Exception as e:
         return JsonResponse({"error": str(e)}, status=400)
 
+
 @login_required
 def framed_view(request):
     return render(request, 'framed.html')
 
-def framed_autocomplete(request): 
+
+def framed_autocomplete(request):
     query = request.GET.get('term', '').lower()
     results = []
 
     if query:
-
         results = list(
             FramedConcept.objects
             .filter(concept__icontains=query)
             .values_list('concept', flat=True)[:10]
         )
-        
+
     return JsonResponse(results, safe=False)
 
+
 def framed_api(request):
-    
     if not request.user.is_authenticated:
         return JsonResponse({'error': 'You must log in'}, status=403)
 
@@ -125,23 +127,24 @@ def framed_api(request):
         game = Framed.objects.select_related('concept').get(date=today)
     except:
         return JsonResponse({'ERROR': 'No game today :p'})
-    
+
     already_played = StatsFramed.objects.filter(user=request.user, game=game).exists()
     if already_played:
         return JsonResponse({
             'already_played': True,
-            'concept': game.concept.concept # Opcional: mostrar la solución
+            'concept': game.concept.concept  # Opcional: mostrar la solución
         })
-    
+
     images = list(
         game.concept.images.all().values_list('image_url', flat=True)
     )
 
     return JsonResponse({
         'already_played': False,
-        'concept' : game.concept.concept,
-        'images' : images
+        'concept': game.concept.concept,
+        'images': images
     })
+
 
 def framed_save_api(request):
     if not request.user.is_authenticated:
@@ -177,6 +180,7 @@ def framed_save_api(request):
 
     return JsonResponse({"status": "saved", "score": score})
 
+
 def home(request):
     ee_user = getattr(settings, 'EE_USER', '')
 
@@ -184,11 +188,11 @@ def home(request):
         StatsWordle.objects
         .filter(completed=True)
         .values('user__username')
-        .annotate(wins=Count('id'))
-        .order_by('-wins')[:3]
+        .annotate(total_score=Sum('score'))
+        .order_by('-total_score')[:3]
     )
     wordle_leaderboard = [
-        {'username': e['user__username'], 'wins': e['wins']}
+        {'username': e['user__username'], 'total_score': e['total_score']}
         for e in wordle_leaderboard
     ]
 
@@ -344,7 +348,8 @@ def profile_view(request):
                 update_session_auth_hash(request, user)
                 success_message = "Password updated successfully."
 
-    wordle_wins = StatsWordle.objects.filter(user=user, completed=True).count()
+
+    wordle_score = StatsWordle.objects.filter(user=user).aggregate(total=Sum('score'))['total'] or 0
     wordle_played = StatsWordle.objects.filter(user=user).count()
 
     connections_wins = StatsConnections.objects.filter(user=user, completed=True).count()
@@ -353,7 +358,7 @@ def profile_view(request):
     framed_played = StatsFramed.objects.filter(user=user).count()
 
     context = {
-        'wordle_wins': wordle_wins,
+        'wordle_score': wordle_score,
         'wordle_played': wordle_played,
         'connections_wins': connections_wins,
         'connections_played': connections_played,
@@ -368,4 +373,3 @@ class SignUpView(CreateView):
     form_class = UserCreationForm
     template_name = 'registration/signup.html'
     success_url = reverse_lazy('login')
-
