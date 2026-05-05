@@ -55,14 +55,14 @@ class FramedAdmin(admin.ModelAdmin):
 
 @admin.register(StatsWordle)
 class StatsWordleAdmin(admin.ModelAdmin):
-    list_display = ("user", "game", "completed")
+    list_display = ("user", "game", "completed", "attempts", "score", "time_taken")
     list_filter = ("completed",)
     search_fields = ("user__username", "game__word")
 
 
 @admin.register(StatsConnections)
 class StatsConnectionsAdmin(admin.ModelAdmin):
-    list_display = ("user", "game", "completed")
+    list_display = ("user", "game", "completed", "points")
     list_filter = ("completed",)
     search_fields = ("user__username",)
 

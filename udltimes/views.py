@@ -27,8 +27,9 @@ from udltimes.models import (
 from django.conf import settings
 
 
+@login_required
 def wordle_view(request):
-    return render(request, 'wordle.html')
+    return render(request, 'wordle/index.html')
 
 @login_required
 def connections_view(request):
@@ -116,11 +117,11 @@ def home(request):
         StatsWordle.objects
         .filter(completed=True)
         .values('user__username')
-        .annotate(wins=Count('id'))
-        .order_by('-wins')[:3]
+        .annotate(total_score=Sum('score'))
+        .order_by('-total_score')[:3]
     )
     wordle_leaderboard = [
-        {'username': e['user__username'], 'wins': e['wins']}
+        {'username': e['user__username'], 'total_score': e['total_score']}
         for e in wordle_leaderboard
     ]
 

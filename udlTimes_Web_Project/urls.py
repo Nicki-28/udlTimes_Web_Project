@@ -8,6 +8,7 @@ from django.contrib import admin
 from django.contrib.auth.views import LogoutView
 from django.urls import path
 
+from templates.wordle.views import check_guess, dailyWordle
 from udltimes.views import (
     SignUpView,
     api_connections_complete,
@@ -29,6 +30,8 @@ from udltimes.views import (
 
 urlpatterns = [
     path('wordle/', wordle_view, name='wordle'),
+    path('wordle/check-guess/', check_guess, name='check_guess'),
+    path('wordle/daily/', dailyWordle, name='dailyWordle'),
     path('connections/', connections_view, name='connections'),
     path('connections/save/', connections_save_view, name='connections_save'),
     path('framed/', framed_view, name='framed'),
