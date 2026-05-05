@@ -1,0 +1,483 @@
+{% extends "base.html" %}
+
+{% block title %}UdL-Times | Connections{% endblock %}
+
+{% block extra_head %}
+
+  <style>
+    .grid-pattern {
+      background-image: radial-gradient(circle, #00000010 1px, transparent 1px);
+      background-size: 20px 20px;
+    }
+
+    .connection-card {
+      height: 80px;
+      border-radius: 10px;
+      border: none;
+      font-weight: 700;
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      cursor: pointer;
+      background: #e2e8f0;
+      color: #1e293b;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 8px;
+      transition: background 0.15s, transform 0.1s, box-shadow 0.15s;
+      user-select: none;
+      -webkit-user-select: none;
+      font-family: 'Inter', sans-serif;
+    }
+    .connection-card:hover:not(.selected) { background: #cbd5e1; }
+    .connection-card:active { transform: scale(0.96); }
+
+    .connection-card.selected {
+      background: #1e293b;
+      color: #fff;
+      box-shadow: 0 4px 12px rgba(30,41,59,0.2);
+      animation: popSelect 0.18s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+    }
+
+    .solved-row {
+      animation: flipIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+    }
+
+    .life-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: #700040;
+      transition: background 0.3s, transform 0.3s;
+    }
+    .life-dot.lost {
+      background: #e2e8f0;
+      transform: scale(0.8);
+    }
+
+    #toast {
+      position: fixed;
+      top: 88px;
+      left: 50%;
+      transform: translateX(-50%) translateY(-12px);
+      background: #1e293b;
+      color: #fff;
+      padding: 10px 22px;
+      border-radius: 999px;
+      font-size: 14px;
+      font-weight: 600;
+      font-family: 'Inter', sans-serif;
+      opacity: 0;
+      pointer-events: none;
+      z-index: 9999;
+      white-space: nowrap;
+      transition: opacity 0.2s, transform 0.2s;
+    }
+    #toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    #one-away-slot {
+      min-height: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 8px;
+    }
+    .one-away-badge {
+      background: #fef3c7;
+      color: #92400e;
+      font-size: 12px;
+      font-weight: 700;
+      font-family: 'Inter', sans-serif;
+      padding: 6px 18px;
+      border-radius: 999px;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      animation: fadeInDown 0.3s ease both;
+    }
+
+    @keyframes popSelect {
+      0%   { transform: scale(1); }
+      50%  { transform: scale(1.07); }
+      100% { transform: scale(1); }
+    }
+    @keyframes shake {
+      0%,100% { transform: translateX(0); }
+      15%     { transform: translateX(-8px); }
+      30%     { transform: translateX(8px); }
+      45%     { transform: translateX(-6px); }
+      60%     { transform: translateX(6px); }
+      75%     { transform: translateX(-3px); }
+      90%     { transform: translateX(3px); }
+    }
+
+    @keyframes pop {
+      0%   { transform: scale(1); }
+      40%  { transform: scale(1.1); }
+      70%  { transform: scale(0.95); }
+      100% { transform: scale(1); }
+    }
+
+    @keyframes flipIn {
+      0%   { transform: rotateX(-90deg); opacity: 0; }
+      100% { transform: rotateX(0deg);  opacity: 1; }
+    }
+    @keyframes fadeInDown {
+      0%   { opacity: 0; transform: translateY(-8px); }
+      100% { opacity: 1; transform: translateY(0); }
+    }
+
+    .shake          { animation: shake 0.45s ease both !important; }
+    @keyframes flipOut {
+      0%   { transform: rotateY(0deg) scale(1); }
+      100% { transform: rotateY(-90deg) scale(1.05); }
+    }
+    @keyframes flipReveal {
+      0%   { transform: rotateY(90deg) scale(1.05); }
+      100% { transform: rotateY(0deg) scale(1); }
+    }
+    .flip-out    { animation: flipOut    0.3s ease forwards; }
+    .flip-reveal { animation: flipReveal 0.3s ease forwards; }
+  </style>
+{% endblock %}
+
+{% block content %}
+  {# ── Overlay de inicio ── #}
+  <div id="intro-overlay" class="fixed inset-0 z-50 flex items-center justify-center" style="background: rgba(248,250,252,0.97)">
+    <div class="flex flex-col items-center gap-6 text-center px-8">
+      <div class="flex flex-col gap-1.5 mb-2">
+        <div class="flex gap-1.5">
+          <div class="w-10 h-5 rounded" style="background:#e9c46a"></div>
+          <div class="w-10 h-5 rounded" style="background:#f4a261"></div>
+        </div>
+        <div class="flex gap-1.5">
+          <div class="w-10 h-5 rounded" style="background:#e76f51"></div>
+          <div class="w-10 h-5 rounded" style="background:#c1440e"></div>
+        </div>
+      </div>
+      <h1 class="font-display text-4xl text-primary tracking-tight">CONNECTIONS</h1>
+      <p class="text-slate-500 text-sm font-medium">Create four groups of four!</p>
+      <button onclick="startGame()" class="mt-2 px-12 py-4 rounded-full bg-primary text-white font-bold text-sm hover:bg-primary-dark transition-colors shadow-lg shadow-primary/20">
+        PLAY
+      </button>
+    </div>
+  </div>
+
+  <div id="toast"></div>
+
+  <div class="max-w-2xl mx-auto">
+
+    <div class="text-center mb-6">
+      <h2 class="text-base font-medium text-slate-500">Create four groups of four!</h2>
+    </div>
+
+    <div id="categorias-resueltas" class="space-y-2 mb-2"></div>
+    <div id="grid" class="grid grid-cols-4 gap-2 mb-3"></div>
+    <div id="one-away-slot"></div>
+
+    <div class="flex flex-col items-center gap-6 mt-4">
+      <div class="flex items-center gap-3">
+        <span class="text-xs font-bold text-slate-400 uppercase tracking-widest">Mistakes remaining:</span>
+        <div id="vidas-container" class="flex gap-2"></div>
+      </div>
+      <div class="flex flex-wrap justify-center gap-3">
+        <button onclick="mezclarPalabras()" class="px-8 py-3 rounded-full border-2 border-slate-900 font-bold text-sm hover:bg-slate-100 transition-colors">SHUFFLE</button>
+        <button onclick="deselectAll()" class="px-8 py-3 rounded-full border-2 border-slate-900 font-bold text-sm hover:bg-slate-100 transition-colors">DESELECT ALL</button>
+        <button onclick="comprobarJugada()" class="px-10 py-3 rounded-full bg-primary text-white font-bold text-sm hover:bg-primary-dark transition-colors shadow-lg shadow-primary/20">SUBMIT</button>
+      </div>
+    </div>
+
+    <div class="mt-14 text-center">
+      <a class="inline-flex items-center gap-2 text-slate-500 hover:text-primary transition-colors font-bold text-sm" href="/">
+        <span class="material-symbols-outlined text-base">arrow_back</span>
+        BACK TO GAMES HUB
+      </a>
+    </div>
+  </div>
+
+{% endblock %}
+
+{% block extra_scripts %}
+  <script>
+    const soluciones = {{ soluciones_json|safe }};
+
+    // estado del juego
+    let categoriasAcertadas = [];
+    let palabrasSeleccionadas = [];
+    let vidas = 4;
+    let enviando = false;
+
+    // .flatMap() coge todas las palabras de los 4 grupos y los mete en una sola lista de 16
+    let palabrasActivas = soluciones.flatMap(s => s.palabras).sort(() => Math.random() - 0.5);
+
+
+    // RENDER COMPLETO: se llama al iniciar, al hacer shuffle y tras un submit correcto
+
+    // añade una categoria resuelta a las ya resueltas con animacion
+    const COLORES_CLAROS = ["#e9c46a", "#f4a261", "#e76f51", "#c1440e"];
+
+    function textoParaFondo(color) {
+      return "#5a0033";
+    }
+
+    function startGame() {
+      const overlay = document.getElementById("intro-overlay");
+      overlay.style.transition = "opacity 0.4s ease";
+      overlay.style.opacity = "0";
+      setTimeout(() => overlay.remove(), 400);
+    }
+
+    function anadirCategoriaResuelta(cat) {
+      const divResueltas = document.getElementById("categorias-resueltas");
+      const div = document.createElement("div");
+      const textColor = textoParaFondo(cat.color);
+      div.className = "rounded-xl p-4 text-center flex flex-col items-center justify-center";
+      div.style.background = cat.color;
+      div.style.color = textColor;
+      div.innerHTML = `
+        <h3 class="font-display text-xs tracking-widest mb-1">${cat.titulo}</h3>
+        <p class="text-xs uppercase font-bold opacity-90">${cat.palabras.join(", ")}</p>`;
+      div.style.transform = "scaleY(0)";
+      div.style.transformOrigin = "top";
+      div.style.opacity = "0";
+      div.style.transition = "transform 0.35s cubic-bezier(0.34,1.56,0.64,1), opacity 0.25s ease";
+      divResueltas.appendChild(div);
+      void div.offsetWidth;
+      div.style.transform = "scaleY(1)";
+      div.style.opacity = "1";
+    }
+
+    function dibujarJuego() {
+      // pintar la cuadricula (abajo)
+      const divGrid = document.getElementById("grid");
+      divGrid.innerHTML = "";
+      palabrasActivas.forEach(palabra => {
+        const btn = document.createElement("button");
+        btn.className = "connection-card" + (palabrasSeleccionadas.includes(palabra) ? " selected" : "");
+        btn.textContent = palabra;
+        btn.dataset.palabra = palabra;
+        btn.addEventListener("click", onCardClick);
+        divGrid.appendChild(btn);
+      });
+
+      // Vidas
+      actualizarVidas();
+    }
+
+    // actualizar seleccion
+    function actualizarSeleccion() {
+      document.querySelectorAll(".connection-card").forEach(btn => {
+        btn.classList.toggle("selected", palabrasSeleccionadas.includes(btn.dataset.palabra));
+      });
+    }
+
+    function actualizarVidas() {
+      const divVidas = document.getElementById("vidas-container");
+      divVidas.innerHTML = "";
+      for (let i = 0; i < 4; i++) {
+        const dot = document.createElement("div");
+        dot.className = "life-dot" + (i >= vidas ? " lost" : "");
+        divVidas.appendChild(dot);
+      }
+    }
+
+    // INTERACTIVIDAD
+
+    // currentTarget siempre es el botón, aunque el click venga del texto hijo
+    function onCardClick(e) {
+      togglePalabra(e.currentTarget.dataset.palabra);
+    }
+
+    function togglePalabra(palabra) {
+      if (enviando) return;
+      if (palabrasSeleccionadas.includes(palabra)) {
+        // si ya estaba seleccionada, la quitamos
+        palabrasSeleccionadas = palabrasSeleccionadas.filter(p => p !== palabra);
+      } else {
+        // si no estaba, y tenemos menos de 4, la añadimos
+        if (palabrasSeleccionadas.length >= 4) return;
+        palabrasSeleccionadas.push(palabra);
+      }
+      actualizarSeleccion();
+    }
+
+    function deselectAll() {
+      if (enviando) return;
+      palabrasSeleccionadas = [];
+      actualizarSeleccion();
+    }
+
+    function mezclarPalabras() {
+      if (enviando) return;
+      palabrasActivas.sort(() => Math.random() - 0.5);
+      // setTimeout 0 para que el rebuild ocurra en el siguiente tick,
+      // después de que el evento click del shuffle haya terminado del todo
+      setTimeout(dibujarJuego, 0);
+    }
+
+
+    // SUBMIT con animaciones
+    async function comprobarJugada() {
+      if (enviando || palabrasSeleccionadas.length !== 4) return;
+      enviando = true;
+
+      // buscamos si la seleccion coincide exactamente con alguna solucion
+      const categoriaEncontrada = soluciones.find(solucion =>
+              solucion.palabras.every(p => palabrasSeleccionadas.includes(p))
+      );
+
+      const botonesSeleccionados = [...document.querySelectorAll(".connection-card.selected")];
+
+      if (categoriaEncontrada) {
+        // correcto: flip secuencial con reveal del color de la categoría
+        for (let i = 0; i < botonesSeleccionados.length; i++) {
+          const btn = botonesSeleccionados[i];
+          await esperar(i * 110);
+
+          // flip hacia afuera
+          btn.classList.add("flip-out");
+          await esperar(300);
+
+          // cambiamos color y hacemos flip hacia adentro
+          btn.style.background = categoriaEncontrada.color;
+          btn.style.color = textoParaFondo(categoriaEncontrada.color);
+          btn.style.boxShadow = "none";
+          btn.classList.remove("flip-out", "selected");
+          btn.classList.add("flip-reveal");
+          await esperar(300);
+          btn.classList.remove("flip-reveal");
+        }
+
+        await esperar(180);
+        categoriasAcertadas.push(categoriaEncontrada);
+        palabrasActivas = palabrasActivas.filter(p => !palabrasSeleccionadas.includes(p));
+        palabrasSeleccionadas = [];
+        limpiarOneAway();
+        anadirCategoriaResuelta(categoriaEncontrada); // solo añade la nueva fila
+        dibujarJuego(); // reconstruye el grid sin tocar las resueltas
+
+        if (categoriasAcertadas.length === 4) {
+          await esperar(300);
+          await guardarResultado(true);
+          mostrarToast("Congratulations! You won!", 3500);
+        }
+
+      } else {
+        // incorrecto
+        const oneAway = soluciones.find(sol =>
+          sol.palabras.filter(p => palabrasSeleccionadas.includes(p)).length === 3
+        );
+        if (oneAway) mostrarOneAway();
+
+        botonesSeleccionados.forEach(btn => btn.classList.add("shake"));
+        await esperar(480);
+        botonesSeleccionados.forEach(btn => btn.classList.remove("shake"));
+
+        vidas--;
+        actualizarVidas(); // solo actualizamos los puntos, no el grid
+
+        if (vidas <= 0) {
+          await esperar(400);
+          palabrasSeleccionadas = [];
+          actualizarSeleccion();
+          await esperar(200);
+          await revelarRespuestas();
+          await guardarResultado(false);
+          mostrarToast("Better luck next time!", 4000);
+        }
+      }
+
+      enviando = false;
+    }
+
+    // REVELAR RESPUESTAS cuando te quedas sin vida
+    async function revelarRespuestas() {
+      // Categorías que aún no se han acertado
+      const pendientes = soluciones.filter(sol =>
+        !categoriasAcertadas.some(a => a.titulo === sol.titulo)
+      );
+
+      for (const cat of pendientes) {
+        // Cogemos las cartas de esta categoría que aún están en el grid
+        const cartas = [...document.querySelectorAll(".connection-card")].filter(btn =>
+          cat.palabras.includes(btn.dataset.palabra)
+        );
+
+        // Flip out uno a uno
+        for (let i = 0; i < cartas.length; i++) {
+          const btn = cartas[i];
+          await esperar(i * 110);
+          btn.classList.add("flip-out");
+          await esperar(300);
+          btn.style.background = cat.color;
+          btn.style.color = textoParaFondo(cat.color);
+          btn.style.boxShadow = "none";
+          btn.classList.remove("flip-out", "selected");
+          btn.classList.add("flip-reveal");
+          await esperar(300);
+          btn.classList.remove("flip-reveal");
+        }
+
+        await esperar(200);
+
+        // Añadimos la fila resuelta con animación
+        categoriasAcertadas.push(cat);
+        palabrasActivas = palabrasActivas.filter(p => !cat.palabras.includes(p));
+        anadirCategoriaResuelta(cat);
+        dibujarJuego();
+
+        await esperar(300);
+      }
+    }
+
+    // UTILIDADES
+    function esperar(ms) {
+      return new Promise(resolve => setTimeout(resolve, ms));
+    }
+
+    function mostrarToast(msg, duracion = 2200) {
+      const toast = document.getElementById("toast");
+      toast.textContent = msg;
+      toast.classList.add("show");
+      clearTimeout(toast._timer);
+      toast._timer = setTimeout(() => toast.classList.remove("show"), duracion);
+    }
+
+    function mostrarOneAway() {
+      const slot = document.getElementById("one-away-slot");
+      slot.innerHTML = `<div class="one-away-badge">One away...</div>`;
+      clearTimeout(slot._ocTimer);
+      slot._ocTimer = setTimeout(() => slot.innerHTML = "", 2500);
+    }
+
+    function limpiarOneAway() {
+      document.getElementById("one-away-slot").innerHTML = "";
+    }
+
+    async function guardarResultado(completed) {
+      const fallos = 4 - vidas;
+      try {
+        await fetch("{% url 'connections_save' %}", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-CSRFToken": "{{ csrf_token }}"
+          },
+          body: JSON.stringify({
+            fallos: fallos,
+            vidas: vidas,
+            completed: completed
+          })
+        });
+      } catch (error) {
+        console.error("Error guardando los puntos:", error);
+      }
+    }
+
+    dibujarJuego();
+  </script>
+{% endblock %}

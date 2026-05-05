@@ -2,6 +2,7 @@ import json
 import random
 import re
 import unicodedata
+
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from django.contrib.auth import login, update_session_auth_hash
@@ -13,7 +14,7 @@ from django.utils import timezone
 from django.views.generic import CreateView
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_GET, require_POST
-from django.db.models import Count
+from django.db.models import Count, Sum
 from udltimes.models import (
     Connections,
     Framed,
@@ -29,10 +30,80 @@ from django.conf import settings
 def wordle_view(request):
     return render(request, 'wordle.html')
 
-
+@login_required
 def connections_view(request):
-    return render(request, 'connections.html')
+    color_palette = ["#e9c46a", "#f4a261", "#e76f51", "#c1440e"]
+    puzzle_today = (
+        Connections.objects
+        .filter(date=timezone.localdate())
+        .prefetch_related("categories__connectionsword_set")
+        .first()
+    )
+    stats = None
+    solutions = []
 
+    if puzzle_today:
+        stats = StatsConnections.objects.filter(user=request.user, game=puzzle_today).first()
+        for index, category in enumerate(puzzle_today.categories.all()[:4]):
+            solutions.append(
+                {
+                    "titulo": category.name,
+                    "palabras": list(category.connectionsword_set.values_list("word", flat=True)),
+                    "color": color_palette[index % len(color_palette)],
+                }
+            )
+
+    return render(
+        request,
+        'connections/connections.html',
+        {
+            "soluciones_json": json.dumps(solutions),
+            "ha_jugado": stats is not None,
+            "puntos_obtenidos": stats.points if stats else 0,
+            "hay_puzzle": puzzle_today is not None,
+        },
+    )
+
+
+@require_POST
+def connections_save_view(request):
+    if not request.user.is_authenticated:
+        return JsonResponse({"error": "Not authenticated"}, status=401)
+
+    try:
+        data = json.loads(request.body)
+
+        # le pedimos al Frontend que nos envíe directamente las vidas restantes (1, 2, 3 o 4)
+        vidas_restantes = data.get("vidas", 0)
+        completed = data.get("completed", False)
+
+        # puntuacion simple: si ganó, multiplica vidas por 100. Si perdió o hizo trampas con vidas < 0, 0 puntos.
+        points = (vidas_restantes * 100) if completed and vidas_restantes > 0 else 0
+
+        today = timezone.now().date()
+
+        # buscamos el puzzle de hoy
+        game = Connections.objects.filter(date=today).first()
+        if not game:
+            return JsonResponse({"error": "No puzzle today"}, status=404)
+
+        # guardamos la estadística
+        stat, created = StatsConnections.objects.get_or_create(
+            user=request.user,
+            game=game,
+            defaults={"completed": completed, "points": points}
+        )
+
+        # si ya había jugado (quizás la refrescó sin querer) y ahora tiene más puntos (o la primera no la guardó como completa), la actualizamos
+        if not created and stat.points < points:
+            stat.completed = completed
+            stat.points = points
+            stat.save()
+
+        return JsonResponse({"points": points, "success": True})
+
+    except Exception as e:
+        return JsonResponse({"error": str(e)}, status=400)
 
 def framed_view(request):
     return render(request, 'framed.html')
@@ -57,7 +128,7 @@ def home(request):
         StatsConnections.objects
         .filter(completed=True)
         .values('user__username')
-        .annotate(points=Count('id'))
+        .annotate(points=Sum('points'))
         .order_by('-points')[:3]
     )
     connections_leaderboard = [
