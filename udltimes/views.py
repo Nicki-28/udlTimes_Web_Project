@@ -1,14 +1,28 @@
+import json
+import random
 import re
+import unicodedata
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from django.contrib.auth import login, update_session_auth_hash
-from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.models import User
-from django.shortcuts import render, redirect
+from django.http import JsonResponse
+from django.shortcuts import get_object_or_404, render, redirect
 from django.urls import reverse_lazy
+from django.utils import timezone
 from django.views.generic import CreateView
-from django.db.models import Count, Q
-from udltimes.models import StatsWordle, StatsFramed, StatsConnections
+from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_GET, require_POST
+from django.db.models import Count
+from udltimes.models import (
+    Connections,
+    Framed,
+    FramedGameData,
+    StatsConnections,
+    StatsFramed,
+    StatsWordle,
+    Wordle,
+)
 from django.conf import settings
 
 
@@ -227,3 +241,248 @@ class SignUpView(CreateView):
     form_class = UserCreationForm
     template_name = 'registration/signup.html'
     success_url = reverse_lazy('login')
+
+
+def _today():
+    return timezone.localdate()
+
+
+def _normalize_text(value):
+    value = unicodedata.normalize("NFKD", str(value or ""))
+    value = "".join(char for char in value if not unicodedata.combining(char))
+    return value.strip().upper()
+
+
+def _json_body(request):
+    if not request.body:
+        return {}
+    try:
+        return json.loads(request.body.decode("utf-8"))
+    except json.JSONDecodeError:
+        return None
+
+
+def _completed_for_user(request, stat_model, game):
+    if not request.user.is_authenticated:
+        return False
+    return stat_model.objects.filter(user=request.user, game=game).exists()
+
+
+def _already_completed_response(game_type):
+    return JsonResponse(
+        {
+            "error": "already_completed",
+            "message": f"You have already completed today's {game_type}.",
+        },
+        status=409,
+    )
+
+
+def _score_wordle_guess(answer, guess):
+    answer = _normalize_text(answer)
+    guess = _normalize_text(guess)
+    colors = ["gray"] * len(answer)
+    remaining = {}
+
+    for index, answer_letter in enumerate(answer):
+        if index < len(guess) and guess[index] == answer_letter:
+            colors[index] = "green"
+        else:
+            remaining[answer_letter] = remaining.get(answer_letter, 0) + 1
+
+    for index, guess_letter in enumerate(guess[:len(answer)]):
+        if colors[index] == "green":
+            continue
+        if remaining.get(guess_letter, 0) > 0:
+            colors[index] = "yellow"
+            remaining[guess_letter] -= 1
+
+    return colors
+
+
+@require_GET
+def api_wordle_today(request):
+    game = get_object_or_404(Wordle, date=_today())
+    return JsonResponse(
+        {
+            "date": game.date.isoformat(),
+            "length": len(_normalize_text(game.word)),
+            "already_completed": _completed_for_user(request, StatsWordle, game),
+        }
+    )
+
+
+@csrf_exempt
+@require_POST
+def api_wordle_guess(request):
+    game = get_object_or_404(Wordle, date=_today())
+    if _completed_for_user(request, StatsWordle, game):
+        return _already_completed_response("wordle")
+
+    data = _json_body(request)
+    if data is None:
+        return JsonResponse({"error": "invalid_json"}, status=400)
+
+    guess = _normalize_text(data.get("guess"))
+    answer = _normalize_text(game.word)
+    if len(guess) != len(answer):
+        return JsonResponse(
+            {
+                "error": "invalid_length",
+                "expected_length": len(answer),
+            },
+            status=400,
+        )
+
+    colors = _score_wordle_guess(answer, guess)
+    correct = guess == answer
+    if correct and request.user.is_authenticated:
+        StatsWordle.objects.get_or_create(
+            user=request.user,
+            game=game,
+            defaults={"completed": True},
+        )
+
+    return JsonResponse(
+        {
+            "date": game.date.isoformat(),
+            "guess": guess,
+            "colors": colors,
+            "correct": correct,
+            "completed_saved": correct and request.user.is_authenticated,
+        }
+    )
+
+
+def _connections_payload(game):
+    categories = []
+    words = []
+    for category in game.categories.prefetch_related("connectionsword_set").all():
+        category_words = list(category.connectionsword_set.values_list("word", flat=True))
+        categories.append(
+            {
+                "name": category.name,
+                "words": category_words,
+            }
+        )
+        words.extend(category_words)
+
+    random.Random(game.date.isoformat()).shuffle(words)
+    return categories, words
+
+
+@require_GET
+def api_connections_today(request):
+    game = get_object_or_404(Connections, date=_today())
+    categories, words = _connections_payload(game)
+    return JsonResponse(
+        {
+            "date": game.date.isoformat(),
+            "words": words,
+            "group_count": len(categories),
+            "already_completed": _completed_for_user(request, StatsConnections, game),
+        }
+    )
+
+
+@csrf_exempt
+@require_POST
+def api_connections_guess(request):
+    game = get_object_or_404(Connections, date=_today())
+    if _completed_for_user(request, StatsConnections, game):
+        return _already_completed_response("connections")
+
+    data = _json_body(request)
+    if data is None:
+        return JsonResponse({"error": "invalid_json"}, status=400)
+
+    selected_words = data.get("words", [])
+    if not isinstance(selected_words, list) or len(selected_words) != 4:
+        return JsonResponse({"error": "select_exactly_4_words"}, status=400)
+
+    selected = {_normalize_text(word) for word in selected_words}
+    categories, _ = _connections_payload(game)
+
+    for category in categories:
+        category_words = {_normalize_text(word) for word in category["words"]}
+        if selected == category_words:
+            completed = bool(data.get("completed"))
+            if completed and request.user.is_authenticated:
+                StatsConnections.objects.get_or_create(
+                    user=request.user,
+                    game=game,
+                    defaults={"completed": True},
+                )
+            return JsonResponse(
+                {
+                    "correct": True,
+                    "category": category["name"],
+                    "words": category["words"],
+                    "completed_saved": completed and request.user.is_authenticated,
+                }
+            )
+
+    return JsonResponse({"correct": False})
+
+
+@csrf_exempt
+@require_POST
+def api_connections_complete(request):
+    game = get_object_or_404(Connections, date=_today())
+    if _completed_for_user(request, StatsConnections, game):
+        return _already_completed_response("connections")
+    if not request.user.is_authenticated:
+        return JsonResponse({"error": "login_required"}, status=401)
+
+    StatsConnections.objects.create(user=request.user, game=game, completed=True)
+    return JsonResponse({"completed_saved": True, "date": game.date.isoformat()})
+
+
+@require_GET
+def api_framed_today(request):
+    game = get_object_or_404(Framed, date=_today())
+    frames = list(
+        FramedGameData.objects
+        .filter(game=game)
+        .order_by("order")
+        .values("order", "image")
+    )
+    answers = list(Framed.objects.order_by("paraula").values_list("paraula", flat=True))
+    return JsonResponse(
+        {
+            "date": game.date.isoformat(),
+            "frames": frames,
+            "max_attempts": len(frames),
+            "answers": answers,
+            "already_completed": _completed_for_user(request, StatsFramed, game),
+        }
+    )
+
+
+@csrf_exempt
+@require_POST
+def api_framed_guess(request):
+    game = get_object_or_404(Framed, date=_today())
+    if _completed_for_user(request, StatsFramed, game):
+        return _already_completed_response("framed")
+
+    data = _json_body(request)
+    if data is None:
+        return JsonResponse({"error": "invalid_json"}, status=400)
+
+    guess = data.get("guess", "")
+    correct = _normalize_text(guess) == _normalize_text(game.paraula)
+    if correct and request.user.is_authenticated:
+        StatsFramed.objects.get_or_create(
+            user=request.user,
+            game=game,
+            defaults={"value": str(guess).strip()},
+        )
+
+    return JsonResponse(
+        {
+            "date": game.date.isoformat(),
+            "correct": correct,
+            "completed_saved": correct and request.user.is_authenticated,
+        }
+    )

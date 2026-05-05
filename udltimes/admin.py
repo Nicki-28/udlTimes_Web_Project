@@ -14,12 +14,60 @@ from .models import (
     Connections,
 )
 
-admin.site.register(Wordle)
-admin.site.register(StatsWordle)
-admin.site.register(Framed)
-admin.site.register(FramedGameData)
-admin.site.register(StatsFramed)
-admin.site.register(ConnectionsCategory)
-admin.site.register(ConnectionsWord)
-admin.site.register(StatsConnections)
-admin.site.register(Connections)
+class ConnectionsWordInline(admin.TabularInline):
+    model = ConnectionsWord
+    extra = 4
+
+
+class FramedGameDataInline(admin.TabularInline):
+    model = FramedGameData
+    extra = 6
+
+
+@admin.register(Wordle)
+class WordleAdmin(admin.ModelAdmin):
+    list_display = ("date", "word")
+    search_fields = ("word",)
+    ordering = ("date",)
+
+
+@admin.register(ConnectionsCategory)
+class ConnectionsCategoryAdmin(admin.ModelAdmin):
+    list_display = ("name",)
+    search_fields = ("name", "connectionsword__word")
+    inlines = [ConnectionsWordInline]
+
+
+@admin.register(Connections)
+class ConnectionsAdmin(admin.ModelAdmin):
+    list_display = ("date",)
+    filter_horizontal = ("categories",)
+    ordering = ("date",)
+
+
+@admin.register(Framed)
+class FramedAdmin(admin.ModelAdmin):
+    list_display = ("date", "paraula")
+    search_fields = ("paraula",)
+    ordering = ("date",)
+    inlines = [FramedGameDataInline]
+
+
+@admin.register(StatsWordle)
+class StatsWordleAdmin(admin.ModelAdmin):
+    list_display = ("user", "game", "completed")
+    list_filter = ("completed",)
+    search_fields = ("user__username", "game__word")
+
+
+@admin.register(StatsConnections)
+class StatsConnectionsAdmin(admin.ModelAdmin):
+    list_display = ("user", "game", "completed")
+    list_filter = ("completed",)
+    search_fields = ("user__username",)
+
+
+@admin.register(StatsFramed)
+class StatsFramedAdmin(admin.ModelAdmin):
+    list_display = ("user", "game", "value")
+    search_fields = ("user__username", "game__paraula", "value")

@@ -15,9 +15,25 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
-from django.urls import path, include
+from django.urls import path
 
-from udltimes.views import SignUpView, home, wordle_view, connections_view, framed_view, register_view, login_view, profile_view
+from udltimes.views import (
+    SignUpView,
+    api_connections_complete,
+    api_connections_guess,
+    api_connections_today,
+    api_framed_guess,
+    api_framed_today,
+    api_wordle_guess,
+    api_wordle_today,
+    connections_view,
+    framed_view,
+    home,
+    login_view,
+    profile_view,
+    register_view,
+    wordle_view,
+)
 from django.contrib.auth.views import LogoutView
 
 urlpatterns = [
@@ -31,4 +47,11 @@ urlpatterns = [
     path("accounts/register/", register_view, name="register"),
     path('accounts/logout/', LogoutView.as_view(next_page='home'), name='logout'),
     path('profile/', profile_view, name='profile'),
+    path('api/wordle/today/', api_wordle_today, name='api_wordle_today'),
+    path('api/wordle/today/guess/', api_wordle_guess, name='api_wordle_guess'),
+    path('api/connections/today/', api_connections_today, name='api_connections_today'),
+    path('api/connections/today/guess/', api_connections_guess, name='api_connections_guess'),
+    path('api/connections/today/complete/', api_connections_complete, name='api_connections_complete'),
+    path('api/framed/today/', api_framed_today, name='api_framed_today'),
+    path('api/framed/today/guess/', api_framed_guess, name='api_framed_guess'),
 ]
