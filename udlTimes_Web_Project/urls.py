@@ -8,9 +8,17 @@ from django.contrib import admin
 from django.contrib.auth.views import LogoutView
 from django.urls import path
 
-from templates.wordle.views import check_guess, dailyWordle
+from django.contrib.auth.views import LogoutView
+
 from udltimes.views import (
     SignUpView,
+    home,
+    wordle_view,
+    connections_view,
+    framed_view,
+    register_view,
+    login_view,
+    profile_view,
     api_connections_complete,
     api_connections_guess,
     api_connections_today,
@@ -19,14 +27,12 @@ from udltimes.views import (
     api_wordle_guess,
     api_wordle_today,
     connections_save_view,
-    connections_view,
-    framed_view,
-    home,
-    login_view,
-    profile_view,
-    register_view,
-    wordle_view,
+    framed_autocomplete,
+    framed_api,
+    framed_save_api,
 )
+
+from udltimes.wordle.views import check_guess, dailyWordle
 
 urlpatterns = [
     path('wordle/', wordle_view, name='wordle'),
