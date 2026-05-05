@@ -74,3 +74,30 @@ class GameApiTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertTrue(response.json()["correct"])
         self.assertTrue(StatsFramed.objects.filter(user=self.user, game=game).exists())
+
+    def test_framed_completed_loss_saves_and_blocks_replay(self):
+        game = Framed.objects.create(date=self.today, paraula="Rectorat")
+        FramedGameData.objects.create(game=game, order=1, image="https://example.com/rectorat.jpg")
+        self.client.login(username="jaume", password="testpass123")
+
+        response = self.client.post(
+            reverse("api_framed_guess"),
+            data=json.dumps({"guess": "EPS", "attempts": 4, "completed": True}),
+            content_type="application/json",
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertFalse(response.json()["correct"])
+        self.assertEqual(response.json()["answer"], "Rectorat")
+
+        stat = StatsFramed.objects.get(user=self.user, game=game)
+        self.assertTrue(stat.completed)
+        self.assertFalse(stat.guessed)
+        self.assertEqual(stat.points, 0)
+
+        repeated = self.client.post(
+            reverse("api_framed_guess"),
+            data=json.dumps({"guess": "Rectorat"}),
+            content_type="application/json",
+        )
+        self.assertEqual(repeated.status_code, 409)

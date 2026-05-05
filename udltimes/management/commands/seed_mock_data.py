@@ -38,7 +38,7 @@ class Command(BaseCommand):
             [
                 ("Campus UdL", ["Rectorat", "Cappont", "ETSEA", "Salut"]),
                 ("Vida universitaria", ["Apunts", "Examen", "Seminari", "Practica"]),
-                ("Serveis", ["Biblioteca", "Campus", "Secretaria", "Moodle"]),
+                ("Serveis", ["Biblioteca", "Campus", "Secretaria", "Sakai"]),
                 ("Graus", ["Dret", "Medicina", "Informatica", "Lletres"]),
             ],
             [
@@ -55,6 +55,7 @@ class Command(BaseCommand):
 
             for category_name, words in game_categories:
                 category, _ = ConnectionsCategory.objects.get_or_create(name=category_name)
+                category.connectionsword_set.exclude(word__in=words).delete()
                 for word in words:
                     ConnectionsWord.objects.get_or_create(category=category, word=word)
                 category_objects.append(category)

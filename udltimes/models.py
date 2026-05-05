@@ -70,6 +70,10 @@ class StatsFramed(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     game = models.ForeignKey(Framed, on_delete=models.CASCADE)
     value = models.CharField(max_length=100)
+    completed = models.BooleanField(default=False)
+    guessed = models.BooleanField(default=False)
+    attempts = models.IntegerField(default=0)
+    points = models.IntegerField(default=0)
 
     class Meta:
         constraints = [models.UniqueConstraint(fields=["user", "game"], name="unique_user_game_statsframed")]
@@ -101,6 +105,5 @@ class StatsWordle(models.Model):
 
     def __str__(self):
         return f"{self.user} - {self.game}"
-
 
 

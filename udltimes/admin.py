@@ -69,5 +69,6 @@ class StatsConnectionsAdmin(admin.ModelAdmin):
 
 @admin.register(StatsFramed)
 class StatsFramedAdmin(admin.ModelAdmin):
-    list_display = ("user", "game", "value")
+    list_display = ("user", "game", "value", "completed", "guessed", "attempts", "points")
+    list_filter = ("completed", "guessed")
     search_fields = ("user__username", "game__paraula", "value")

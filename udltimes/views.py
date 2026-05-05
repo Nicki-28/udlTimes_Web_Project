@@ -8,7 +8,7 @@ from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from django.contrib.auth import login, update_session_auth_hash
 from django.contrib.auth.models import User
 from django.http import JsonResponse
-from django.shortcuts import get_object_or_404, render, redirect
+from django.shortcuts import render, redirect
 from django.urls import reverse_lazy
 from django.utils import timezone
 from django.views.generic import CreateView
@@ -139,12 +139,13 @@ def home(request):
 
     framed_leaderboard = (
         StatsFramed.objects
+        .filter(completed=True)
         .values('user__username')
-        .annotate(streaks=Count('id'))
-        .order_by('-streaks')[:3]
+        .annotate(points=Sum('points'))
+        .order_by('-points')[:3]
     )
     framed_leaderboard = [
-        {'username': e['user__username'], 'streaks': e['streaks']}
+        {'username': e['user__username'], 'points': e['points']}
         for e in framed_leaderboard
     ]
 
@@ -295,7 +296,7 @@ def profile_view(request):
     connections_wins = StatsConnections.objects.filter(user=user, completed=True).count()
     connections_played = StatsConnections.objects.filter(user=user).count()
 
-    framed_played = StatsFramed.objects.filter(user=user).count()
+    framed_played = StatsFramed.objects.filter(user=user, completed=True).count()
 
     context = {
         'wordle_wins': wordle_wins,
@@ -337,7 +338,10 @@ def _json_body(request):
 def _completed_for_user(request, stat_model, game):
     if not request.user.is_authenticated:
         return False
-    return stat_model.objects.filter(user=request.user, game=game).exists()
+    query = stat_model.objects.filter(user=request.user, game=game)
+    if stat_model is StatsWordle:
+        return query.filter(completed=True).exists()
+    return query.exists()
 
 
 def _already_completed_response(game_type):
@@ -348,6 +352,13 @@ def _already_completed_response(game_type):
         },
         status=409,
     )
+
+
+def _today_game_or_error(model):
+    try:
+        return model.objects.get(date=_today()), None
+    except model.DoesNotExist:
+        return None, JsonResponse({"error": "no_game_today"}, status=404)
 
 
 def _score_wordle_guess(answer, guess):
@@ -374,7 +385,9 @@ def _score_wordle_guess(answer, guess):
 
 @require_GET
 def api_wordle_today(request):
-    game = get_object_or_404(Wordle, date=_today())
+    game, error = _today_game_or_error(Wordle)
+    if error:
+        return error
     return JsonResponse(
         {
             "date": game.date.isoformat(),
@@ -387,7 +400,9 @@ def api_wordle_today(request):
 @csrf_exempt
 @require_POST
 def api_wordle_guess(request):
-    game = get_object_or_404(Wordle, date=_today())
+    game, error = _today_game_or_error(Wordle)
+    if error:
+        return error
     if _completed_for_user(request, StatsWordle, game):
         return _already_completed_response("wordle")
 
@@ -409,11 +424,13 @@ def api_wordle_guess(request):
     colors = _score_wordle_guess(answer, guess)
     correct = guess == answer
     if correct and request.user.is_authenticated:
-        StatsWordle.objects.get_or_create(
+        stat, _ = StatsWordle.objects.get_or_create(
             user=request.user,
             game=game,
-            defaults={"completed": True},
         )
+        if not stat.completed:
+            stat.completed = True
+            stat.save()
 
     return JsonResponse(
         {
@@ -445,7 +462,9 @@ def _connections_payload(game):
 
 @require_GET
 def api_connections_today(request):
-    game = get_object_or_404(Connections, date=_today())
+    game, error = _today_game_or_error(Connections)
+    if error:
+        return error
     categories, words = _connections_payload(game)
     return JsonResponse(
         {
@@ -460,7 +479,9 @@ def api_connections_today(request):
 @csrf_exempt
 @require_POST
 def api_connections_guess(request):
-    game = get_object_or_404(Connections, date=_today())
+    game, error = _today_game_or_error(Connections)
+    if error:
+        return error
     if _completed_for_user(request, StatsConnections, game):
         return _already_completed_response("connections")
 
@@ -500,7 +521,9 @@ def api_connections_guess(request):
 @csrf_exempt
 @require_POST
 def api_connections_complete(request):
-    game = get_object_or_404(Connections, date=_today())
+    game, error = _today_game_or_error(Connections)
+    if error:
+        return error
     if _completed_for_user(request, StatsConnections, game):
         return _already_completed_response("connections")
     if not request.user.is_authenticated:
@@ -512,7 +535,9 @@ def api_connections_complete(request):
 
 @require_GET
 def api_framed_today(request):
-    game = get_object_or_404(Framed, date=_today())
+    game, error = _today_game_or_error(Framed)
+    if error:
+        return error
     frames = list(
         FramedGameData.objects
         .filter(game=game)
@@ -534,7 +559,9 @@ def api_framed_today(request):
 @csrf_exempt
 @require_POST
 def api_framed_guess(request):
-    game = get_object_or_404(Framed, date=_today())
+    game, error = _today_game_or_error(Framed)
+    if error:
+        return error
     if _completed_for_user(request, StatsFramed, game):
         return _already_completed_response("framed")
 
@@ -543,18 +570,31 @@ def api_framed_guess(request):
         return JsonResponse({"error": "invalid_json"}, status=400)
 
     guess = data.get("guess", "")
+    try:
+        attempts = max(1, int(data.get("attempts") or 1))
+    except (TypeError, ValueError):
+        attempts = 1
+    completed = bool(data.get("completed"))
     correct = _normalize_text(guess) == _normalize_text(game.paraula)
-    if correct and request.user.is_authenticated:
+    if request.user.is_authenticated and (correct or completed):
+        points = max(0, 60 - ((attempts - 1) * 10)) if correct else 0
         StatsFramed.objects.get_or_create(
             user=request.user,
             game=game,
-            defaults={"value": str(guess).strip()},
+            defaults={
+                "value": str(guess).strip(),
+                "completed": True,
+                "guessed": correct,
+                "attempts": attempts,
+                "points": points,
+            },
         )
 
     return JsonResponse(
         {
             "date": game.date.isoformat(),
             "correct": correct,
-            "completed_saved": correct and request.user.is_authenticated,
+            "answer": game.paraula if completed and not correct else None,
+            "completed_saved": request.user.is_authenticated and (correct or completed),
         }
     )
