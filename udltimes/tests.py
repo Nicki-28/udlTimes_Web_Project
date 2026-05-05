@@ -33,7 +33,7 @@ class GameApiTests(TestCase):
         )
 
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.json()["colors"], ["green"] * 6)
+        self.assertEqual(response.json()["colors"], ["green"] * 5)
         self.assertTrue(StatsWordle.objects.filter(user=self.user, game=game).exists())
 
         repeated = self.client.post(
