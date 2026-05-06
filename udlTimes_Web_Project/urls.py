@@ -17,7 +17,27 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path
 
-from udltimes.views import SignUpView, home, wordle_view, connections_view, framed_view, register_view, login_view, profile_view, framed_autocomplete, framed_api, framed_save_api, connections_save_view
+from udltimes.views import (
+    SignUpView,
+    api_connections_complete,
+    api_connections_guess,
+    api_connections_today,
+    api_framed_guess,
+    api_framed_today,
+    api_wordle_guess,
+    api_wordle_today,
+    connections_save_view,
+    connections_view,
+    framed_api,
+    framed_autocomplete,
+    framed_save_api,
+    framed_view,
+    home,
+    login_view,
+    profile_view,
+    register_view,
+    wordle_view,
+)
 from django.contrib.auth.views import LogoutView
 from udltimes.wordle.views import check_guess,dailyWordle
 
@@ -38,4 +58,11 @@ urlpatterns = [
     path('profile/', profile_view, name='profile'),
     path('wordle/daily/', dailyWordle, name='dailyWordle'),
     path('framed/movie-autocomplete/', framed_autocomplete, name='framed autocomplete'),
+    path('api/wordle/today/', api_wordle_today, name='api_wordle_today'),
+    path('api/wordle/today/guess/', api_wordle_guess, name='api_wordle_guess'),
+    path('api/connections/today/', api_connections_today, name='api_connections_today'),
+    path('api/connections/today/guess/', api_connections_guess, name='api_connections_guess'),
+    path('api/connections/today/complete/', api_connections_complete, name='api_connections_complete'),
+    path('api/framed/today/', api_framed_today, name='api_framed_today'),
+    path('api/framed/today/guess/', api_framed_guess, name='api_framed_guess'),
 ]
