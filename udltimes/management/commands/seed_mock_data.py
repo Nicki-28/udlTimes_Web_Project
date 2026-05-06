@@ -206,12 +206,12 @@ class Command(BaseCommand):
 
     def _seed_mock_users_and_stats(self, today):
         users_data = [
-            ("anna_mock", "Anna Mock", 485, 390, 100),
-            ("pol_mock", "Pol Mock", 430, 250, 80),
-            ("nicole_mock", "Nicole Mock", 370, 400, 70),
-            ("yasmin_mock", "Yasmin Mock", 315, 300, 40),
-            ("nataly_mock", "Nataly Mock", 260, 150, 30),
-            ("toni_mock", "Toni Mock", 210, 100, 0),
+            ("jaume_mock", "Jaume Mock", 485, 390, 100),
+            ("pol_mock", "Pol Mock", 430, 0, 80),
+            ("nicole_mock", "Nicole Mock", 20, 30, 10),
+            ("yasmin_mock", "Yasmin Mock", 10, 20, 0),
+            ("nataly_mock", "Nataly Mock", 5, 10, 0),
+            ("toni_mock", "Toni Mock", 0, 250, 0),
         ]
 
         wordles = list(Wordle.objects.filter(date__gte=today).order_by("date")[:5])
