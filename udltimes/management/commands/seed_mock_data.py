@@ -98,7 +98,7 @@ class Command(BaseCommand):
             [
                 ("Campus UdL", ["Rectorat", "Cappont", "ETSEA", "Salut"]),
                 ("Vida universitaria", ["Apunts", "Examen", "Seminari", "Practica"]),
-                ("Serveis", ["Biblioteca", "Campus", "Secretaria", "Moodle"]),
+                ("Serveis", ["Biblioteca", "Campus", "Secretaria", "Sakai"]),
                 ("Graus", ["Dret", "Medicina", "Informatica", "Lletres"]),
             ],
             [
