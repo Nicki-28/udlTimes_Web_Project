@@ -183,6 +183,24 @@ class Command(BaseCommand):
                     "https://i.ibb.co/QvdtfWh8/Polivalent-4-Polivalent.webp",
                 ],
             ),
+            (
+                "Rectorat",
+                [
+                    "https://i.ibb.co/1GLRm2sm/Rectorat-1-Aula.webp",
+                    "https://i.ibb.co/Ld3rQY8Z/Rectorat-2-Parking.webp",
+                    "https://i.ibb.co/27w3yQSX/Rectorat-3-Biblioteca.webp",
+                    "https://i.ibb.co/DHpKyvvK/Rectorat-4-Edifici.webp",
+                ],
+            ),
+            (
+                "Biblioteca Jaume Porta",
+                [
+                    "https://i.ibb.co/gMZB3Gp9/Biblioteca-Jaume-Porta-1-Butaca.webp",
+                    "https://i.ibb.co/q3hkBrMY/Biblioteca-Jaume-Porta-2-Taquilles.webp",
+                    "https://i.ibb.co/20MZVYJ0/Biblioteca-Jaume-Porta-3-Auditori.webp",
+                    "https://i.ibb.co/3mbPsk9p/Biblioteca-Jaume-Porta-4-Edifici.webp",
+                ],
+            ),
         ]
 
         for offset, (answer, images) in enumerate(games):
