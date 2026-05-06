@@ -82,9 +82,24 @@ class Command(BaseCommand):
         self._seed_wordles(today)
         self._seed_connections(today)
         self._seed_frameds(today)
+        self._seed_admin_user()
         self._seed_mock_users_and_stats(today)
 
         self.stdout.write(self.style.SUCCESS("Mock data created or updated."))
+
+    def _seed_admin_user(self):
+        user, _ = User.objects.get_or_create(
+            username="admin",
+            defaults={
+                "email": "admin@example.com",
+                "is_staff": True,
+                "is_superuser": True,
+            },
+        )
+        user.is_staff = True
+        user.is_superuser = True
+        user.set_password("admin")
+        user.save()
 
     def _seed_wordles(self, today):
         for offset, word in enumerate(WORDLE_SEED_WORDS):
