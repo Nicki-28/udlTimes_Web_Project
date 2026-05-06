@@ -37,8 +37,7 @@ def wordle_view(request):
 @login_required
 def connections_view(request):
     today = timezone.now().date()
-    # puzzle_hoy = Connections.objects.filter(date=today).first() esto lo usaremos mas adelante cuando añadamos todos los puzzles a la bbdd
-    puzzle_hoy = Connections.objects.last()
+    puzzle_hoy = Connections.objects.filter(date=today).first()
 
     stats = None
     if puzzle_hoy:
@@ -84,9 +83,7 @@ def connections_save_view(request):
 
         today = timezone.now().date()
 
-        # buscamos el puzzle de hoy
-        # game = Connections.objects.filter(date=today).first()
-        game = Connections.objects.last()
+        game = Connections.objects.filter(date=today).first()
         if not game:
             return JsonResponse({"error": "No puzzle today"}, status=404)
 

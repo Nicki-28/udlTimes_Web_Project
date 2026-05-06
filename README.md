@@ -28,15 +28,15 @@ docker-compose up --build
 
 The application will be available at **http://localhost:8000**
 
-### 3. ⚠️ Load initial data (required)
+### 3. Load mock data
 
 After the containers are up, open a **new terminal window** and run:
 
 ```bash
-docker compose exec web uv run python manage.py loaddata initial_data.json
+docker compose exec web uv run python manage.py seed_mock_data
 ```
 
-> This step is **mandatory** to be able to test the Connections game. Without it, the game will have no data to display.
+This creates mock Wordle, Connections, Framed, users, and stats data for local testing.
 
 ---
 

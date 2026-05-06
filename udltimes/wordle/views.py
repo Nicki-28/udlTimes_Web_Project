@@ -10,6 +10,62 @@ from django.shortcuts import render
 from udltimes.models import Wordle, StatsWordle
 from django.db.models import Sum
 
+WORDLE_FALLBACK_WORDS = [
+    "REDES",
+    "DATOS",
+    "NODOS",
+    "CACHE",
+    "PIXEL",
+    "CLICK",
+    "TECLA",
+    "PROXY",
+    "LOGIN",
+    "ADMIN",
+    "INPUT",
+    "PATCH",
+    "STACK",
+    "ERROR",
+    "SHELL",
+    "BATCH",
+    "FIBER",
+    "CIFRA",
+    "GAMER",
+    "SPAWN",
+    "BUILD",
+    "STATS",
+    "QUEST",
+    "LEVEL",
+    "CRAFT",
+    "GRIND",
+    "SKINS",
+    "MATCH",
+    "CARRY",
+    "NOOBS",
+    "BUFFS",
+    "NERFS",
+    "AGGRO",
+    "MELEE",
+    "FRAME",
+    "LOBBY",
+    "GRAFO",
+    "ROBOT",
+    "MOVIL",
+    "CHIPS",
+    "MIRET",
+    "MAGDA",
+    "JOSEP",
+    "NACHO",
+    "SERGI",
+    "PABLO",
+    "ORIOL",
+    "CORES",
+    "ROUND",
+    "BONUS",
+    "SMOKE",
+    "HILOS",
+]
+
+
 @ensure_csrf_cookie
 def wordle_page(request):
     return render(request, 'wordle/index.html')
@@ -117,19 +173,9 @@ def dailyWordle(request):
         if wordle_obj:
             daily_word = wordle_obj.word
         else:
-            file_path = os.path.join(settings.BASE_DIR, 'templates', 'wordle', 'words.txt')
-            try:
-                with open(file_path, "r", encoding="utf-8") as f:
-                    words = f.read().splitlines()
-                    words = [w.strip() for w in words if len(w.strip()) == 5]
-
-                    daily_generator = random.Random(today_date.toordinal())
-                    daily_word = daily_generator.choice(words).upper()
-
-                Wordle.objects.create(date=today_date, word=daily_word)
-
-            except (FileNotFoundError, IndexError):
-                return JsonResponse({"status": "500", "mssg": "Error interno: Archivo words.txt no encontrado o vacío"})
+            daily_generator = random.Random(today_date.toordinal())
+            daily_word = daily_generator.choice(WORDLE_FALLBACK_WORDS)
+            Wordle.objects.create(date=today_date, word=daily_word)
 
         return JsonResponse({
             "status": "200",

@@ -1,6 +1,5 @@
 from datetime import timedelta
 
-from django.conf import settings
 from django.contrib.auth.models import User
 from django.core.management.base import BaseCommand
 from django.utils import timezone
@@ -18,6 +17,61 @@ from udltimes.models import (
     Wordle,
 )
 
+WORDLE_SEED_WORDS = [
+    "REDES",
+    "DATOS",
+    "NODOS",
+    "CACHE",
+    "PIXEL",
+    "CLICK",
+    "TECLA",
+    "PROXY",
+    "LOGIN",
+    "ADMIN",
+    "INPUT",
+    "PATCH",
+    "STACK",
+    "ERROR",
+    "SHELL",
+    "BATCH",
+    "FIBER",
+    "CIFRA",
+    "GAMER",
+    "SPAWN",
+    "BUILD",
+    "STATS",
+    "QUEST",
+    "LEVEL",
+    "CRAFT",
+    "GRIND",
+    "SKINS",
+    "MATCH",
+    "CARRY",
+    "NOOBS",
+    "BUFFS",
+    "NERFS",
+    "AGGRO",
+    "MELEE",
+    "FRAME",
+    "LOBBY",
+    "GRAFO",
+    "ROBOT",
+    "MOVIL",
+    "CHIPS",
+    "MIRET",
+    "MAGDA",
+    "JOSEP",
+    "NACHO",
+    "SERGI",
+    "PABLO",
+    "ORIOL",
+    "CORES",
+    "ROUND",
+    "BONUS",
+    "SMOKE",
+    "HILOS",
+]
+
 
 class Command(BaseCommand):
     help = "Create mock games for Wordle, Connections and Framed."
@@ -33,27 +87,11 @@ class Command(BaseCommand):
         self.stdout.write(self.style.SUCCESS("Mock data created or updated."))
 
     def _seed_wordles(self, today):
-        words = self._load_wordle_words()
-        for offset, word in enumerate(words):
+        for offset, word in enumerate(WORDLE_SEED_WORDS):
             Wordle.objects.update_or_create(
                 date=today + timedelta(days=offset),
                 defaults={"word": word.upper()},
             )
-
-    def _load_wordle_words(self):
-        words_path = settings.BASE_DIR / "templates" / "wordle" / "words.txt"
-        fallback_words = ["AULAS", "BECAS", "LIBRO", "TESIS", "NOTAS"]
-
-        try:
-            words = [
-                line.strip().upper()
-                for line in words_path.read_text(encoding="utf-8").splitlines()
-                if len(line.strip()) == 5
-            ]
-        except FileNotFoundError:
-            words = fallback_words
-
-        return words or fallback_words
 
     def _seed_connections(self, today):
         games = [
@@ -68,6 +106,24 @@ class Command(BaseCommand):
                 ("Calendari", ["Parcial", "Final", "Entrega", "Tutoria"]),
                 ("Material", ["Portatil", "Llibreta", "Boligraf", "Carpeta"]),
                 ("Tramits", ["Matricula", "Beca", "Conveni", "Certificat"]),
+            ],
+            [
+                ("Assignatures", ["Algebra", "Xarxes", "Fisica", "Programacio"]),
+                ("Eines digitals", ["Git", "Docker", "Python", "Django"]),
+                ("Avaluacio", ["Rubrica", "Projecte", "Practica", "Presentacio"]),
+                ("Biblioteca", ["Prestec", "Silenci", "Taquilla", "Cataleg"]),
+            ],
+            [
+                ("Campus Cappont", ["EPS", "Dret", "Aulari", "Polivalent"]),
+                ("Tecnologia", ["Servidor", "Endpoint", "Branch", "Commit"]),
+                ("Vida de classe", ["Apunts", "Lliurament", "Grup", "Tutoria"]),
+                ("UdL colors", ["Grana", "Blanc", "Negre", "Daurat"]),
+            ],
+            [
+                ("Rols projecte", ["Frontend", "Backend", "Disseny", "Testing"]),
+                ("Dades", ["Seed", "Mock", "Json", "Fixture"]),
+                ("Jocs", ["Wordle", "Framed", "Connections", "Leaderboard"]),
+                ("Accions Git", ["Merge", "Push", "Pull", "Checkout"]),
             ],
         ]
 
