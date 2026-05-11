@@ -671,6 +671,12 @@ def api_framed_guess(request):
         }
     )
 
+
+@login_required
+def my_wordles_view(request):
+    wordles = CustomWordle.objects.filter(author=request.user).order_by('-created_at')
+    return render(request, 'wordle/my_wordles.html', {'wordles': wordles})
+
 """
 --------CRUD--------
 """

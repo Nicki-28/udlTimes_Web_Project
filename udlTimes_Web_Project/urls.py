@@ -40,7 +40,8 @@ from udltimes.views import (
     wordle_view,
     WordleCreateView,
     WordleDeleteView,
-    WordleUpdateView
+    WordleUpdateView,
+    my_wordles_view
 )
 from django.contrib.auth.views import LogoutView
 from udltimes.wordle.views import check_guess,dailyWordle
@@ -75,4 +76,5 @@ urlpatterns = [
     path('wordle/play/<int:pk>/', custom_wordle_view, name='play_custom_wordle'),
     path('wordle/edit/<int:pk>/', WordleUpdateView.as_view(), name='wordle_edit'),
     path('wordle/delete/<int:pk>/', WordleDeleteView.as_view(), name='wordle_delete'),
+    path('wordle/my/', my_wordles_view, name='my_wordles'),
 ]
