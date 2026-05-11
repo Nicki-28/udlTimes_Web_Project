@@ -2,6 +2,7 @@ import os
 import json
 import random
 import datetime
+import requests
 from django.http import JsonResponse
 from django.conf import settings
 from django.views.decorators.csrf import csrf_exempt, csrf_protect, ensure_csrf_cookie
@@ -10,119 +11,128 @@ from django.shortcuts import render
 from udltimes.models import Wordle, StatsWordle
 from django.db.models import Sum
 
-WORDLE_FALLBACK_WORDS = [
-    "REDES",
-    "DATOS",
-    "NODOS",
-    "CACHE",
-    "PIXEL",
-    "CLICK",
-    "TECLA",
-    "PROXY",
-    "LOGIN",
-    "ADMIN",
-    "INPUT",
-    "PATCH",
-    "STACK",
-    "ERROR",
-    "SHELL",
-    "BATCH",
-    "FIBER",
-    "CIFRA",
-    "GAMER",
-    "SPAWN",
-    "BUILD",
-    "STATS",
-    "QUEST",
-    "LEVEL",
-    "CRAFT",
-    "GRIND",
-    "SKINS",
-    "MATCH",
-    "CARRY",
-    "NOOBS",
-    "BUFFS",
-    "NERFS",
-    "AGGRO",
-    "MELEE",
-    "FRAME",
-    "LOBBY",
-    "GRAFO",
-    "ROBOT",
-    "MOVIL",
-    "CHIPS",
-    "MIRET",
-    "MAGDA",
-    "JOSEP",
-    "NACHO",
-    "SERGI",
-    "PABLO",
-    "ORIOL",
-    "CORES",
-    "ROUND",
-    "BONUS",
-    "SMOKE",
-    "HILOS",
-]
-
-
 @ensure_csrf_cookie
 def wordle_page(request):
     return render(request, 'wordle/index.html')
 
 
+def palabra_existe_en_rae(word: str) -> bool:
+    """
+    Verifica si una palabra existe usando la API de la RAE.
+    """
+
+    try:
+        response = requests.get(
+            f"https://rae-api.com/api/words/{word.lower()}",
+            timeout=5
+        )
+
+        if response.status_code != 200:
+            return False
+
+        data = response.json()
+
+        return data.get("ok", False)
+
+    except requests.RequestException:
+        return False
+
+
+def palabra_existe_en_dictionaryapi(word: str) -> bool:
+    """
+    Verifica si una palabra existe en inglés usando DictionaryAPI.
+    """
+
+    try:
+        response = requests.get(
+            f"https://api.dictionaryapi.dev/api/v2/entries/en/{word.lower()}",
+            timeout=5
+        )
+
+        # 200 = existe
+        return response.status_code == 200
+
+    except requests.RequestException:
+        return False
+
 @csrf_protect
 def check_guess(request):
-    if not request.user.is_authenticated:
-        return JsonResponse({"status": "401", "mssg": "Debes iniciar sesión para jugar."})
 
-    if request.method == 'POST':
+    if not request.user.is_authenticated:
+        return JsonResponse({
+            "status": "401",
+            "mssg": "Debes iniciar sesión para jugar."
+        })
+
+    if request.method != 'POST':
+        return JsonResponse({
+            "status": "405",
+            "mssg": "Método no permitido"
+        })
+
+    try:
         data = json.loads(request.body)
-        guess = data.get('guess', '').upper()
+
+        guess = data.get('guess', '').upper().strip()
         attempt = data.get('attempt', 1)
         time_taken = data.get('time', 0)
 
-        # Validar longitud antes de cualquier otra cosa
+        # Validar longitud
         if len(guess) != 5:
-            return JsonResponse({"status": "invalid_word", "mssg": "La palabra debe tener 5 letras"})
+            return JsonResponse({
+                "status": "invalid_word",
+                "mssg": "La palabra debe tener 5 letras"
+            })
 
-        # Validar que la palabra exista en el diccionario
-        diccionario_path = os.path.join(settings.BASE_DIR, 'templates', 'wordle', 'diccionario.txt')
-        try:
-            with open(diccionario_path, "r", encoding="utf-8") as f:
-                palabras_validas = {w.strip().upper() for w in f}
-        except FileNotFoundError:
-            return JsonResponse({"status": "500", "mssg": "Error interno: diccionario.txt no encontrado"})
+        # Validar existencia en RAE
+        if not (palabra_existe_en_rae(guess) or palabra_existe_en_dictionaryapi(guess)):
+            return JsonResponse({
+                "status": "invalid_word",
+                "mssg": "La palabra no existe"
+            })
 
-        if guess not in palabras_validas:
-            return JsonResponse({"status": "invalid_word", "mssg": "La palabra no existe"})
+        # Obtener palabra del día
+        word_obj = Wordle.objects.filter(
+            date=datetime.date.today()
+        ).first()
 
-        # Obtener la palabra del día
-        word_obj = Wordle.objects.filter(date=datetime.date.today()).first()
         if not word_obj:
-            return JsonResponse({"status": "error", "mssg": "La palabra de hoy no se ha generado aún."})
+            return JsonResponse({
+                "status": "error",
+                "mssg": "La palabra de hoy no se ha generado aún."
+            })
 
         secret = word_obj.word.upper()
 
-        # Lógica de colores
+        # Lógica Wordle
         colors = ["absent"] * 5
+
         secret_list = list(secret)
         guess_list = list(guess)
 
+        # Letras correctas
         for i in range(5):
             if guess_list[i] == secret_list[i]:
                 colors[i] = "correct"
                 secret_list[i] = None
                 guess_list[i] = None
 
+        # Letras presentes
         for i in range(5):
-            if guess_list[i] is not None and guess_list[i] in secret_list:
+            if (
+                guess_list[i] is not None
+                and guess_list[i] in secret_list
+            ):
                 colors[i] = "present"
                 secret_list[secret_list.index(guess_list[i])] = None
 
-        win = (colors == ["correct"] * 5)
+        win = colors == ["correct"] * 5
 
-        stat, created = StatsWordle.objects.get_or_create(user=request.user, game=word_obj)
+        # Guardar estadísticas
+        stat, created = StatsWordle.objects.get_or_create(
+            user=request.user,
+            game=word_obj
+        )
 
         if win or attempt == 6:
             stat.completed = True
@@ -141,6 +151,18 @@ def check_guess(request):
             response_data["word"] = secret
 
         return JsonResponse(response_data)
+
+    except json.JSONDecodeError:
+        return JsonResponse({
+            "status": "error",
+            "mssg": "JSON inválido"
+        })
+
+    except Exception as e:
+        return JsonResponse({
+            "status": "error",
+            "mssg": str(e)
+        }, status=500)
 
 
 @csrf_exempt
@@ -173,9 +195,8 @@ def dailyWordle(request):
         if wordle_obj:
             daily_word = wordle_obj.word
         else:
-            daily_generator = random.Random(today_date.toordinal())
-            daily_word = daily_generator.choice(WORDLE_FALLBACK_WORDS)
-            Wordle.objects.create(date=today_date, word=daily_word)
+            return JsonResponse({"status": "error", "mssg": "La palabra de hoy no se ha generado aún."})
+
 
         return JsonResponse({
             "status": "200",
