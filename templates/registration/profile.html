@@ -177,6 +177,18 @@
 
     </div>
 
+    <div class="mt-6 bg-white dark:bg-[#161b22] p-6 border-2 border-slate-200 dark:border-[#30363d] shadow-sm">
+        <h3 class="font-display text-sm text-slate-500 dark:text-slate-400 mb-4 flex items-center gap-2">
+            <span class="material-symbols-outlined text-primary">grid_on</span>
+            MY CUSTOM WORDLES
+        </h3>
+        <a href="{% url 'my_wordles' %}"
+        class="w-full py-3 border-2 border-primary text-primary font-display text-sm hover:bg-primary hover:text-white transition-colors uppercase tracking-wide flex items-center justify-center gap-2">
+            <span class="material-symbols-outlined text-sm">open_in_new</span>
+            Manage my Wordles
+        </a>
+    </div>
+
 </div>
 
 {% endblock %}
