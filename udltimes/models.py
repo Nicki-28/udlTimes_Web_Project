@@ -94,10 +94,18 @@ class StatsFramed(models.Model):
 class Wordle(models.Model):
     date = models.DateField(primary_key=True)
     word = models.CharField(max_length=100)
-    author = models.ForeignKey(User, on_delete=models.CASCADE, related_name="custom_wordles", null=True, blank=True)
+
     def __str__(self):
         return f"{self.date} - {self.word}"
 
+class CustomWordle(models.Model):
+    word = models.CharField(max_length=100)
+    author = models.ForeignKey(User, on_delete=models.CASCADE, related_name="custom_wordles")
+    created_at = models.DateTimeField(auto_now_add=True) 
+
+    def __str__(self):
+        return f"Custom Wordle #{self.id} by {self.author}"
+    
 
 class StatsWordle(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)

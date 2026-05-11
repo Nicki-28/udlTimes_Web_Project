@@ -1,7 +1,15 @@
 from django import forms
-from .models import Wordle
+from .models import CustomWordle
 
 class WordleForm(forms.ModelForm):
     class Meta:
-        model = Wordle
-        fields = ['date', 'word'] # El autor se asigna automáticamente en la vista
+        model = CustomWordle
+        fields = ['word']
+        # clases de Tailwind a los inputs de HTML
+        widgets = {
+            'word': forms.TextInput(attrs={
+                'class': 'w-full mt-1 px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#700040] focus:border-transparent uppercase',
+                'placeholder': 'Ej: CORES',
+                'maxlength': '5'
+            })
+        }

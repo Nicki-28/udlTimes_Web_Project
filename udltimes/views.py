@@ -3,6 +3,11 @@ import random
 import re
 import unicodedata
 
+from django.urls import reverse
+from django.views.generic import CreateView, UpdateView, DeleteView
+from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
+from .models import CustomWordle
+from .forms import WordleForm
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from django.contrib.auth import login, update_session_auth_hash
@@ -665,3 +670,55 @@ def api_framed_guess(request):
             "completed_saved": completed and request.user.is_authenticated,
         }
     )
+
+"""
+--------CRUD--------
+"""
+
+# CREATE
+class WordleCreateView(LoginRequiredMixin, CreateView):
+    model = CustomWordle
+    form_class = WordleForm
+    template_name = 'wordle/wordle_form.html'
+
+    def form_valid(self, form):
+        form.instance.author = self.request.user # Asigna el usuario logueado como autor
+        return super().form_valid(form)
+
+    def get_success_url(self):
+        return reverse('play_custom_wordle', kwargs={'pk': self.object.pk})
+    
+
+def custom_wordle_view(request, pk):
+    # Buscamos el juego exacto usando la ID que nos llega por la URL
+    juego_custom = get_object_or_404(CustomWordle, pk=pk)
+    
+    context = {
+        'juego_custom': juego_custom,
+        'palabra_secreta': juego_custom.word # La palabra que eligió el usuario
+    }
+    
+    return render(request, 'wordle/custom_wordle.html', context)
+
+# EDIT (only the author)
+class WordleUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
+    model = CustomWordle
+    form_class = WordleForm
+    template_name = 'wordle/wordle_form.html'
+
+    def test_func(self): # Comprueba si es el autor
+        wordle = self.get_object()
+        return self.request.user == wordle.author
+    
+    def get_success_url(self):
+        return reverse('play_custom_wordle', kwargs={'pk': self.object.pk})
+    
+# BORRAR (only the author)
+class WordleDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
+    model = CustomWordle
+    template_name = 'wordle/wordle_confirm_delete.html'
+    success_url = reverse_lazy('home')
+
+    def test_func(self):
+        wordle = self.get_object()
+        return self.request.user == wordle.author
