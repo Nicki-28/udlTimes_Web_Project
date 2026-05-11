@@ -55,6 +55,12 @@ def palabra_existe_en_dictionaryapi(word: str) -> bool:
     except requests.RequestException:
         return False
 
+
+def palabra_existe_db(word):
+    return Wordle.objects.filter(
+        word__iexact=word
+    ).exists()
+
 @csrf_protect
 def check_guess(request):
 
@@ -85,7 +91,7 @@ def check_guess(request):
             })
 
         # Validar existencia en RAE
-        if not (palabra_existe_en_rae(guess) or palabra_existe_en_dictionaryapi(guess)):
+        if not (palabra_existe_en_rae(guess) or palabra_existe_en_dictionaryapi(guess) or palabra_existe_db(guess)):
             return JsonResponse({
                 "status": "invalid_word",
                 "mssg": "La palabra no existe"
