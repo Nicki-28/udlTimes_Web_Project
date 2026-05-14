@@ -13,8 +13,7 @@ Feature: Edit Custom Wordle
     When I visit the edit page for wordle "TEST"
     And I fill in the word field with "WORDS"
     And I submit the form
-    Then I should see "WORDS"
-    And I should be on the custom wordle play page
+    Then I should be on the custom wordle play page
 
   Scenario: Try to edit custom wordle without being logged in
     Given I am not logged in

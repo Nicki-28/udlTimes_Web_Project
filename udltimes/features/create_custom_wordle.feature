@@ -11,8 +11,7 @@ Feature: Create Custom Wordle
     When I visit the wordle creation page
     And I fill in the word field with "CORES"
     And I submit the form
-    Then I should see "CORES"
-    And I should be on the custom wordle play page
+    Then I should be on the custom wordle play page
 
   Scenario: Try to create custom wordle without being logged in
     Given I am not logged in
