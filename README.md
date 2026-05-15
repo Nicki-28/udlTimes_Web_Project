@@ -1,86 +1,127 @@
-# UDL Times — Web Project
 
-A daily puzzle and gaming platform inspired by The New York Times Games, built with Django and the corporate colors of the **Universitat de Lleida (UdL)**.
+# 🎓 UDL Times — Web Project
 
-Play Connections, Wordle, and Framed — track your stats, climb the leaderboards, and enjoy a fully responsive experience on any device.
-> Note: All game content (words, categories, movie frames, etc.) is based on fictional or university-related data created specifically for this project. It does not reflect real events, people, or official UdL information. 
+Una plataforma de juegos y acertijos diarios inspirada en *The New York Times Games*, desarrollada con **Django** y personalizada con la identidad visual de la **Universitat de Lleida (UdL)**.
+
+Disfruta de *Connections*, *Wordle* y *Framed*: sigue tus estadísticas, compite en los rankings y vive una experiencia totalmente responsiva.
+
+> **Nota:** Todo el contenido (palabras, categorías, películas) se basa en datos ficticios o universitarios creados para este proyecto. No refleja información oficial de la UdL.
 
 ---
 
-## Getting Started
+## 🚀 Comenzando
 
-### Prerequisites
+### Requisitos previos
+* [Docker](https://www.docker.com/get-started) y [Docker Compose](https://docs.docker.com/compose/) instalados.
 
-- [Docker](https://www.docker.com/get-started) and [Docker Compose](https://docs.docker.com/compose/) installed on your machine.
-
-### 1. Clone the repository
-
+### 1. Clonar el repositorio
 ```bash
-git clone https://github.com/Nicki-28/udlTimes_Web_Project.git
+git clone [https://github.com/Nicki-28/udlTimes_Web_Project.git](https://github.com/Nicki-28/udlTimes_Web_Project.git)
 cd udlTimes_Web_Project
+
 ```
 
-### 2. Build and run the containers
+### 2. Levantar el proyecto
 
 ```bash
 docker-compose up --build
+
 ```
 
-The application will be available at **http://localhost:8000**
+La aplicación estará disponible en: **http://localhost:8000**
 
-### 3. Load mock data
+### 3. Cargar datos de prueba (Mock Data)
 
-After the containers are up, open a **new terminal window** and run:
+En una nueva terminal, ejecuta:
 
 ```bash
 docker compose exec web uv run python manage.py seed_mock_data
-```
-
-This creates mock Wordle, Connections, Framed, users, and stats data for local testing.
-
----
-
-## Features
-
-- **Connections** — group words by hidden categories
-- **Wordle** — guess the daily 5-letter word
-- **Framed** — identify the movie from its frames
-- **Statistics system** — track your personal performance over time
-- **Leaderboards** — compete for the top spots against other players
-- **Responsive design** — optimized for mobile, tablet, and desktop
-
----
-
-## Tech Stack
-
-| Layer | Technology |
-|---|---|
-| Backend | Python 3, Django |
-| Frontend | HTML5, CSS3, Vanilla JavaScript, Tailwind CSS |
-| Templating | Django Templates (Jinja2-style) |
-| Database | PostgreSQL (via Docker) |
-| Containerization | Docker + Docker Compose |
-| Dependencies | `uv` / `pyproject.toml` |
-
----
-
-## Project Structure
 
 ```
+
+Esto creará usuarios, estadísticas y partidas de ejemplo para Wordle, Connections y Framed.
+
+---
+
+## 🛠️ Stack Tecnológico
+
+| Capa | Tecnología |
+| --- | --- |
+| **Backend** | Python 3, Django |
+| **Frontend** | HTML5, CSS3, Vanilla JS, Tailwind CSS |
+| **Base de Datos** | PostgreSQL (Dockerizado) |
+| **Tests E2E** | Behave (BDD), Splinter, Selenium |
+| **Gestión Dependencias** | `uv`, `pyproject.toml` |
+
+---
+
+## 🧪 Testing End-to-End (E2E)
+
+Hemos implementado una suite de pruebas robusta utilizando **Behave** (Behavior-Driven Development) y **Splinter** para asegurar el correcto funcionamiento de los flujos críticos.
+
+### Estructura de Pruebas
+
+```text
+udltimes/
+└── features/
+    ├── environment.py              # Configuración del navegador (Headless Chrome)
+    ├── *.feature                   # Escenarios en lenguaje Gherkin
+    └── steps/
+        ├── common_steps.py         # Pasos compartidos (Login, Navegación)
+        └── *_wordle.py             # Lógica específica por funcionalidad
+
+```
+
+### Niveles de Implementación
+
+1. **Nivel 1: `.feature` (Gherkin):** Definición de escenarios en lenguaje natural.
+2. **Nivel 2: `steps/*.py` (Python):** Código que traduce el texto en acciones del navegador.
+3. **Nivel 3: `environment.py` (Driver):** Configuración técnica del navegador (Chrome Headless, seguridad, etc.).
+
+### Cobertura de Escenarios
+
+| Funcionalidad | Escenarios | Puntos |
+| --- | --- | --- |
+| **Creación Custom Wordle** | Éxito, sin login, palabra vacía, longitud inválida, caracteres no permitidos. | 3.0 |
+| **Edición Custom Wordle** | Éxito como autor, sin login, intento de editar ajeno, validación vacía. | 3.0 |
+| **Eliminación Custom Wordle** | Éxito como autor, sin login, intento de eliminar ajeno. | 1.5 |
+
+### Ejecución de Tests
+
+Para ejecutar las pruebas en tu entorno local:
+
+```bash
+# 1. Asegúrate de que la DB esté corriendo
+docker compose up -d db
+
+# 2. Ejecutar Behave (desde el root del proyecto)
+POSTGRES_HOST=localhost python3 manage.py behave --keepdb
+
+```
+
+> **Nota técnica:** Debido a que el modal de login es manejado por JavaScript, los tests utilizan `execute_script` para interactuar con elementos ocultos del DOM, garantizando la fluidez de las pruebas.
+
+---
+
+## 📂 Estructura del Proyecto
+
+```bash
 udlTimes_Web_Project/
-├── static/                        # CSS, JS, images, fonts
-├── templates/                     # HTML templates (Django template engine)
-├── udlTimes_Web_Project/          # Django project settings & URLs
-├── udltimes/                      # Main Django app (models, views, urls)
-├── manage.py
-├── Dockerfile
-├── docker-compose.yml
-├── pyproject.toml
-└── uv.lock
+├── static/                # Activos (CSS, JS, Imágenes)
+├── templates/             # Plantillas HTML (Django Templates)
+├── udlTimes_Web_Project/  # Configuración del Core del proyecto
+├── udltimes/              # Aplicación principal (Models, Views, Features)
+├── manage.py              # Script de gestión de Django
+├── Dockerfile             # Configuración de imagen de contenedor
+└── pyproject.toml         # Dependencias y herramientas de desarrollo
+
 ```
 
 ---
 
-## About
+## 📝 Notas de Versión Recientes
 
-This project was developed as part of a university web project at the **[Universitat de Lleida (UdL)](https://www.udl.cat/)**.
+* **Behave-Django:** Integrado en `INSTALLED_APPS`.
+* **Corrección de Modelos:** Añadido `max_length` en descripciones de `FramedConcept`.
+* **Docker Tuning:** Puerto `5432` expuesto para facilitar pruebas locales.
+* **Login Fix:** Solucionada la interacción de Selenium con modales de Tailwind.
