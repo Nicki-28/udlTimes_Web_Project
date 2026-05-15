@@ -30,7 +30,7 @@ INSTALLED_APPS = [
 # Add testing apps dynamically if TESTING mode is ON
 try:
     import behave_django  # noqa
-    INSTALLED_APPS.append('behave-django')
+    INSTALLED_APPS.append('behave_django')
 except ImportError:
     pass
 

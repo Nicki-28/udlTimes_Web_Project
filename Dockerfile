@@ -14,8 +14,7 @@ COPY pyproject.toml uv.lock ./
 # Install the exact packages pinned in uv.lock
 # --frozen: don't update the lockfile, just install what's in it
 # --no-dev: skip development-only dependencies
-RUN uv sync --frozen --no-dev
-
+RUN uv sync --frozen --extra test
 # Copy the entire project into the container
 COPY . .
 
