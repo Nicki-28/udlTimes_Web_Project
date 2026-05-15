@@ -1,127 +1,128 @@
 
 # 🎓 UDL Times — Web Project
 
-Una plataforma de juegos y acertijos diarios inspirada en *The New York Times Games*, desarrollada con **Django** y personalizada con la identidad visual de la **Universitat de Lleida (UdL)**.
+A daily puzzle and gaming platform inspired by *The New York Times Games*, built with **Django** and customized with the visual identity of the **Universitat de Lleida (UdL)**.
 
-Disfruta de *Connections*, *Wordle* y *Framed*: sigue tus estadísticas, compite en los rankings y vive una experiencia totalmente responsiva.
+Enjoy *Connections*, *Wordle*, and *Framed*: track your stats, compete on the leaderboards, and experience a fully responsive design.
 
-> **Nota:** Todo el contenido (palabras, categorías, películas) se basa en datos ficticios o universitarios creados para este proyecto. No refleja información oficial de la UdL.
+> **Note:** All content (words, categories, movies) is based on fictional or university-related data created specifically for this project. It does not reflect official UdL information.
 
 ---
 
-## 🚀 Comenzando
+## 🚀 Getting Started
 
-### Requisitos previos
-* [Docker](https://www.docker.com/get-started) y [Docker Compose](https://docs.docker.com/compose/) instalados.
+### Prerequisites
+* [Docker](https://www.docker.com/get-started) and [Docker Compose](https://docs.docker.com/compose/) installed.
 
-### 1. Clonar el repositorio
+### 1. Clone the repository
 ```bash
 git clone [https://github.com/Nicki-28/udlTimes_Web_Project.git](https://github.com/Nicki-28/udlTimes_Web_Project.git)
 cd udlTimes_Web_Project
 
 ```
 
-### 2. Levantar el proyecto
+### 2. Build and run the project
 
 ```bash
 docker-compose up --build
 
 ```
 
-La aplicación estará disponible en: **http://localhost:8000**
+The application will be available at: **http://localhost:8000**
 
-### 3. Cargar datos de prueba (Mock Data)
+### 3. Load mock data
 
-En una nueva terminal, ejecuta:
+In a new terminal, run:
 
 ```bash
 docker compose exec web uv run python manage.py seed_mock_data
 
 ```
 
-Esto creará usuarios, estadísticas y partidas de ejemplo para Wordle, Connections y Framed.
+This will create sample users, statistics, and games for Wordle, Connections, and Framed.
 
 ---
 
-## 🛠️ Stack Tecnológico
+## 🛠️ Tech Stack
 
-| Capa | Tecnología |
+| Layer | Technology |
 | --- | --- |
 | **Backend** | Python 3, Django |
 | **Frontend** | HTML5, CSS3, Vanilla JS, Tailwind CSS |
-| **Base de Datos** | PostgreSQL (Dockerizado) |
-| **Tests E2E** | Behave (BDD), Splinter, Selenium |
-| **Gestión Dependencias** | `uv`, `pyproject.toml` |
+| **Database** | PostgreSQL (Dockerized) |
+| **E2E Tests** | Behave (BDD), Splinter, Selenium |
+| **Dependency Management** | `uv`, `pyproject.toml` |
 
 ---
 
-## 🧪 Testing End-to-End (E2E)
+## 🧪 End-to-End (E2E) Testing
 
-Hemos implementado una suite de pruebas robusta utilizando **Behave** (Behavior-Driven Development) y **Splinter** para asegurar el correcto funcionamiento de los flujos críticos.
+We have implemented a robust test suite using **Behave** (Behavior-Driven Development) and **Splinter** to ensure the proper functioning of critical workflows.
 
-### Estructura de Pruebas
+### Test Structure
 
 ```text
 udltimes/
 └── features/
-    ├── environment.py              # Configuración del navegador (Headless Chrome)
-    ├── *.feature                   # Escenarios en lenguaje Gherkin
+    ├── environment.py              # Browser configuration (Headless Chrome)
+    ├── *.feature                   # Gherkin language scenarios
     └── steps/
-        ├── common_steps.py         # Pasos compartidos (Login, Navegación)
-        └── *_wordle.py             # Lógica específica por funcionalidad
+        ├── common_steps.py         # Shared steps (Login, Navigation)
+        └── *_wordle.py             # Feature-specific logic
 
 ```
 
-### Niveles de Implementación
+### Implementation Levels
 
-1. **Nivel 1: `.feature` (Gherkin):** Definición de escenarios en lenguaje natural.
-2. **Nivel 2: `steps/*.py` (Python):** Código que traduce el texto en acciones del navegador.
-3. **Nivel 3: `environment.py` (Driver):** Configuración técnica del navegador (Chrome Headless, seguridad, etc.).
+1. **Level 1: `.feature` (Gherkin):** Scenario definitions in natural language.
+2. **Level 2: `steps/*.py` (Python):** Code that translates the text into browser actions.
+3. **Level 3: `environment.py` (Driver):** Technical browser configuration (Chrome Headless, security overrides, etc.).
 
-### Cobertura de Escenarios
+### Scenario Coverage
 
-| Funcionalidad | Escenarios | Puntos |
+| Feature | Scenarios | Points |
 | --- | --- | --- |
-| **Creación Custom Wordle** | Éxito, sin login, palabra vacía, longitud inválida, caracteres no permitidos. | 3.0 |
-| **Edición Custom Wordle** | Éxito como autor, sin login, intento de editar ajeno, validación vacía. | 3.0 |
-| **Eliminación Custom Wordle** | Éxito como autor, sin login, intento de eliminar ajeno. | 1.5 |
+| **Create Custom Wordle** | Success, no login, empty word, invalid length, unauthorized characters. | 3.0 |
+| **Edit Custom Wordle** | Success as author, no login, attempt to edit others, empty validation. | 3.0 |
+| **Delete Custom Wordle** | Success as author, no login, attempt to delete others. | 1.5 |
 
-### Ejecución de Tests
+### Running the Tests
 
-Para ejecutar las pruebas en tu entorno local:
+To run the tests in your local environment:
 
 ```bash
-# 1. Asegúrate de que la DB esté corriendo
+# 1. Ensure the DB is running
 docker compose up -d db
 
-# 2. Ejecutar Behave (desde el root del proyecto)
+# 2. Run Behave (from the project root)
 POSTGRES_HOST=localhost python3 manage.py behave --keepdb
 
 ```
 
-> **Nota técnica:** Debido a que el modal de login es manejado por JavaScript, los tests utilizan `execute_script` para interactuar con elementos ocultos del DOM, garantizando la fluidez de las pruebas.
+> **Technical Note:** Because the login modal is handled by JavaScript, the tests use `execute_script` to interact with hidden DOM elements, ensuring smooth test execution.
 
 ---
 
-## 📂 Estructura del Proyecto
+## 📂 Project Structure
 
 ```bash
 udlTimes_Web_Project/
-├── static/                # Activos (CSS, JS, Imágenes)
-├── templates/             # Plantillas HTML (Django Templates)
-├── udlTimes_Web_Project/  # Configuración del Core del proyecto
-├── udltimes/              # Aplicación principal (Models, Views, Features)
-├── manage.py              # Script de gestión de Django
-├── Dockerfile             # Configuración de imagen de contenedor
-└── pyproject.toml         # Dependencias y herramientas de desarrollo
+├── static/                # Assets (CSS, JS, Images)
+├── templates/             # HTML Templates (Django Templates)
+├── udlTimes_Web_Project/  # Core project configuration
+├── udltimes/              # Main application (Models, Views, Features)
+├── manage.py              # Django management script
+├── Dockerfile             # Container image configuration
+└── pyproject.toml         # Dependencies and development tools
 
 ```
 
 ---
 
-## 📝 Notas de Versión Recientes
+## 📝 Recent Release Notes
 
-* **Behave-Django:** Integrado en `INSTALLED_APPS`.
-* **Corrección de Modelos:** Añadido `max_length` en descripciones de `FramedConcept`.
-* **Docker Tuning:** Puerto `5432` expuesto para facilitar pruebas locales.
-* **Login Fix:** Solucionada la interacción de Selenium con modales de Tailwind.
+* **Behave-Django:** Integrated into `INSTALLED_APPS`.
+* **Model Fixes:** Added `max_length` to `FramedConcept` descriptions.
+* **Docker Tuning:** Port `5432` exposed to facilitate local testing.
+* **Login Fix:** Resolved Selenium interaction issues with Tailwind modals.
+
