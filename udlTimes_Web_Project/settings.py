@@ -25,6 +25,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'udltimes',
+    "behave_django",
 ]
 
 # Add testing apps dynamically if TESTING mode is ON
