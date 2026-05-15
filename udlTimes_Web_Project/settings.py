@@ -25,14 +25,10 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'udltimes',
+    'behave_django',
 ]
 
-# Add testing apps dynamically if TESTING mode is ON
-try:
-    import behave_django  # noqa
-    INSTALLED_APPS.append('behave_django')
-except ImportError:
-    pass
+
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
