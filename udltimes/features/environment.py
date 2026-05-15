@@ -1,9 +1,17 @@
+# python
 import os
 import django
 from behave.runner import Context
-from splinter.browser import Browser
+
+try:
+    from splinter import Browser
+except ImportError as e:
+    raise ImportError(
+        "El paquete `splinter` no está instalado en el intérprete actual. "
+        "Instala con: pip install splinter selenium"
+    ) from e
+
 from selenium.webdriver.chrome.service import Service
-from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.chrome.options import Options
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'udlTimes_Web_Project.settings')
@@ -12,7 +20,6 @@ os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'udlTimes_Web_Project.settings')
 class ExtendedContext(Context):
     def get_url(self, to=None, *args, **kwargs):
         from django.urls import reverse
-        from django.test import TestCase
         live_server_url = getattr(self.test, 'live_server_url', 'http://localhost')
         return live_server_url + (
             reverse(to, args=args, kwargs=kwargs) if to else '')
@@ -26,6 +33,7 @@ def before_scenario(context, scenario):
     object.__setattr__(context, '__class__', ExtendedContext)
 
     chrome_options = Options()
+    chrome_options.binary_location = "/usr/bin/chromium"
     chrome_options.add_argument('--headless=new')
     chrome_options.add_argument('--no-sandbox')
     chrome_options.add_argument('--disable-dev-shm-usage')
@@ -47,8 +55,9 @@ def before_scenario(context, scenario):
     chrome_options.add_argument('--ignore-ssl-errors')
     chrome_options.add_argument('--ignore-certificate-errors-spki-list')
 
-    service = Service(ChromeDriverManager().install())
-    context.browser = Browser('chrome', headless=True, service=service, options=chrome_options)
+    service = Service('/usr/bin/chromedriver')
+    # No pasar headless aquí; ya se configura vía chrome_options
+    context.browser = Browser('chrome', service=service, options=chrome_options)
 
 
 def after_scenario(context, scenario):

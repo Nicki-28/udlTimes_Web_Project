@@ -690,6 +690,7 @@ dependencies = [
     { name = "psycopg", extra = ["binary"] },
     { name = "python-decouple" },
     { name = "requests" },
+    { name = "splinter" },
     { name = "uvicorn", extra = ["standard"] },
 ]
 
@@ -715,6 +716,7 @@ requires-dist = [
     { name = "python-decouple", specifier = ">=3.8" },
     { name = "requests", specifier = ">=2.31" },
     { name = "selenium", marker = "extra == 'test'", specifier = ">=4.0" },
+    { name = "splinter", specifier = ">=0.21.0" },
     { name = "splinter", marker = "extra == 'test'", specifier = ">=0.21" },
     { name = "uvicorn", extras = ["standard"] },
     { name = "webdriver-manager", marker = "extra == 'test'", specifier = ">=4.0" },
