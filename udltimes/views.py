@@ -336,7 +336,7 @@ def profile_view(request):
 
         if action == "update_name":
             full_name = request.POST.get("full_name", "").strip()
-            user.first_name = full_name
+            user.username = full_name
             user.save()
             success_message = "Name updated successfully."
 
