@@ -13,6 +13,8 @@ dependencies = [
     "flask-cors>=6.0.2",
     "requests>=2.31",
     "splinter>=0.21.0",
+    "behave-django",
+    "selenium>=4.44.0",
 ]
 
 [project.optional-dependencies]
