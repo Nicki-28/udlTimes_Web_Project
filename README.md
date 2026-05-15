@@ -9,7 +9,7 @@ Enjoy *Connections*, *Wordle*, and *Framed*: track your stats, compete on the le
 
 ---
 
-## 🚀 Getting Started
+## Getting Started
 
 ### Prerequisites
 * [Docker](https://www.docker.com/get-started) and [Docker Compose](https://docs.docker.com/compose/) installed.
@@ -91,11 +91,12 @@ udltimes/
 To run the tests in your local environment:
 
 ```bash
-# 1. Ensure the DB is running
-docker compose up -d db
+# 1. Ensure docker is running
+docker compose up 
 
-# 2. Run Behave (from the project root)
-POSTGRES_HOST=localhost python3 manage.py behave --keepdb
+# 2. Run Behave
+docker compose exec -e POSTGRES_HOST=db web /app/.venv/bin/python manage.py behave --keepdb
+
 
 ```
 
