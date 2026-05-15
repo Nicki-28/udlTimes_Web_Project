@@ -67,6 +67,13 @@ def step_not_logged_in(context):
     except:
         pass
 
+@when(u'I fill in the word field with ""')
+def step_fill_word_empty(context):
+    driver = context.browser.driver
+    driver.execute_script("""
+        var input = document.getElementById('id_word');
+        if (input) { input.value = ''; input.dispatchEvent(new Event('input', { bubbles: true })); }
+    """)
 
 @when('I fill in the word field with "{word}"')
 def step_fill_word(context, word):
