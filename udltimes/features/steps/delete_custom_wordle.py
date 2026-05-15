@@ -18,6 +18,6 @@ def step_wordle_not_exists(context, word):
 
 @when('I click the delete button')
 def step_click_delete(context):
-    context.browser.find_by_css('[type="submit"]').first.click()
+    context.browser.execute_script("document.getElementById('delete-wordle-form').submit();")
     import time
     time.sleep(2)

@@ -90,7 +90,7 @@
         </button>
 
         {% if request.user == juego_custom.author %}
-            <a href="{% url 'wordle_edit' juego_custom.pk %}" 
+            <a href="{% url 'wordle_update' juego_custom.pk %}" 
                 class="flex items-center justify-center gap-2 px-6 py-2 border-2 border-[#700040] text-[#700040] font-bold rounded-full uppercase tracking-wider text-sm hover:bg-[#700040] hover:text-white transition-colors duration-300">
                 <span class="material-symbols-outlined text-base">edit</span>
                 Edit Word
