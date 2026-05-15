@@ -15,10 +15,10 @@ Enjoy *Connections*, *Wordle*, and *Framed*: track your stats, compete on the le
 * [Docker](https://www.docker.com/get-started) and [Docker Compose](https://docs.docker.com/compose/) installed.
 
 ### 1. Clone the repository
-```bash
-git clone [https://github.com/Nicki-28/udlTimes_Web_Project.git](https://github.com/Nicki-28/udlTimes_Web_Project.git)
-cd udlTimes_Web_Project
 
+```bash
+git clone https://github.com/Nicki-28/udlTimes_Web_Project.git
+cd udlTimes_Web_Project
 ```
 
 ### 2. Build and run the project
