@@ -14,8 +14,8 @@ COPY pyproject.toml uv.lock ./
 # Install the exact packages pinned in uv.lock
 # --frozen: don't update the lockfile, just install what's in it
 # --no-dev: skip development-only dependencies
-RUN uv sync --frozen --no-dev
-
+RUN uv sync --frozen --extra test
+RUN apt-get update && apt-get install -y chromium chromium-driver && rm -rf /var/lib/apt/lists/*
 # Copy the entire project into the container
 COPY . .
 

@@ -48,7 +48,7 @@ class StatsConnections(models.Model):
 
 class FramedConcept(models.Model):
     concept = models.CharField(max_length=200, unique=True)
-    description = models.CharField(blank=True)
+    description = models.CharField(max_length=500, blank=True)
 
     def __str__(self):
         return self.concept

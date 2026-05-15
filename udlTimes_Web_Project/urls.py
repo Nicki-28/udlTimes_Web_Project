@@ -16,8 +16,6 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path
-from udltimes.views import WordleCreateView, WordleUpdateView, WordleDeleteView, custom_wordle_view
-
 from udltimes.views import (
     SignUpView,
     api_connections_complete,
@@ -41,7 +39,8 @@ from udltimes.views import (
     WordleCreateView,
     WordleDeleteView,
     WordleUpdateView,
-    my_wordles_view
+    custom_wordle_view,
+    my_wordles_view,
 )
 from django.contrib.auth.views import LogoutView
 from udltimes.wordle.views import check_guess,dailyWordle
@@ -71,10 +70,8 @@ urlpatterns = [
     path('api/framed/today/', api_framed_today, name='api_framed_today'),
     path('api/framed/today/guess/', api_framed_guess, name='api_framed_guess'),
     path('wordle/new/', WordleCreateView.as_view(), name='wordle_create'),
-    path('wordle/<slug:pk>/edit/', WordleUpdateView.as_view(), name='wordle_update'),
-    path('wordle/<slug:pk>/delete/', WordleDeleteView.as_view(), name='wordle_delete'),
+    path('wordle/<int:pk>/edit/', WordleUpdateView.as_view(), name='wordle_update'),
+    path('wordle/<int:pk>/delete/', WordleDeleteView.as_view(), name='wordle_delete'),
     path('wordle/play/<int:pk>/', custom_wordle_view, name='play_custom_wordle'),
-    path('wordle/edit/<int:pk>/', WordleUpdateView.as_view(), name='wordle_edit'),
-    path('wordle/delete/<int:pk>/', WordleDeleteView.as_view(), name='wordle_delete'),
     path('wordle/my/', my_wordles_view, name='my_wordles'),
 ]
