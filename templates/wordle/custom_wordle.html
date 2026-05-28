@@ -9,10 +9,30 @@
 {% endblock %}
 
 {% block content %}
-<div class="flex flex-col items-center justify-center w-full min-h-[calc(100vh-250px)]">
+<div vocab="https://schema.org/" typeof="VideoGame" class="flex flex-col items-center justify-center w-full min-h-[calc(100vh-250px)]">
+    <meta property="applicationCategory" content="Browser Game" />
+    <meta property="genre" content="Word Puzzle" />
 
     <div class="text-center">
-        <h1 class="text-3xl dark:text-primary font-display mb-8 font-extrabold text-primary">WORDLE</h1>
+        <h1 property="name" class="text-3xl dark:text-primary font-display mb-8 font-extrabold text-primary">WORDLE</h1>
+
+        {% if juego_custom %}
+        <p class="text-sm mb-4 text-gray-500">
+            Created by: 
+            <span property="author" typeof="Person">
+                <span property="name" class="font-bold text-primary">{{ juego_custom.author }}</span>
+            </span>
+        </p>
+        {% endif %}
+
+        <div property="publisher" typeof="Organization" class="hidden">
+            <meta property="name" content="UdL-Times" />
+            <div property="location" typeof="PostalAddress">
+                <meta property="addressLocality" content="Lleida" />
+                <meta property="addressRegion" content="Catalonia" />
+                <meta property="addressCountry" content="ES" />
+            </div>
+        </div>
 
         <div id="tablero" class="grid grid-cols-5 grid-rows-6 gap-1.5 mx-auto w-fit"></div>
         <div id="keyboard" class="flex flex-col items-center gap-2 mt-7"></div>
